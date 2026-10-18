@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import logo from "../assets/log.png";
-import "./AdminAdd.css";
+import "./AdminForm.css";
 
-function AdminAdd() {
+function AdminForm() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("Admin");
@@ -36,7 +36,7 @@ function AdminAdd() {
         <header className="admin-header">
           <div className="admin-heading">
             <div className="admin-breadcrumb">
-              Admin / Admin Management / Admins / Add
+              Admin / Admin Management / AdminForm
             </div>
             <h1>Add Admin</h1>
           </div>
@@ -152,4 +152,4 @@ function AdminAdd() {
   );
 }
 
-export default AdminAdd;
+export default AdminForm;
