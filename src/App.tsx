@@ -4,6 +4,7 @@ import { AdminSidebar } from "./components/admin/AdminSidebar";
 import { AdminTopbar } from "./components/admin/AdminTopbar";
 import { AdminBottomNav } from "./components/admin/AdminBottomNav";
 import { AdminDashboard } from "./pages/AdminDashboard";
+import { VendorApplicationsPage } from "./pages/VendorApplicationsPage";
 
 function Layout() {
   const [open, setOpen] = useState(false);
@@ -28,6 +29,7 @@ function Layout() {
           <Route path="/dashboard" element={<AdminDashboard />} />
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          <Route path="/admin/vendors" element={<VendorApplicationsPage />} />
           {/* Fallback - shows dashboard for any other /admin/* link until you create real pages */}
           <Route path="/admin/:page" element={<AdminDashboard />} />
           <Route path="*" element={<AdminDashboard />} />
