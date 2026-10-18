@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import logo from "../assets/log.png";
+import logo from "../src/assets/logos/lightmode-logo.svg";
 import "./AdminForm.css";
 
 function AdminForm() {
