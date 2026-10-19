@@ -10,17 +10,23 @@ function AdminForm() {
   const [password, setPassword] = useState("");
   const [sendInvite, setSendInvite] = useState(true);
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
+    const form = event.currentTarget;
+
+    if (!form.checkValidity()) {
+      form.reportValidity();
+      return;
+    }
+
     alert(`Admin details entered for ${fullName} (${email}).`);
-  }
+  };
 
   function generatePassword() {
     const generated = Math.random().toString(36).slice(-10);
     setPassword(generated);
   }
-
   return (
     <div className="admin-layout">
       {/* Left sidebar */}
@@ -63,7 +69,7 @@ function AdminForm() {
 
             <form onSubmit={handleSubmit}>
               <div className="admin-field">
-                <label htmlFor="fullName">Full Name</label>
+                <label htmlFor="fullName">Full Name*</label>
                 <input
                   id="fullName"
                   type="text"
@@ -75,7 +81,7 @@ function AdminForm() {
               </div>
 
               <div className="admin-field">
-                <label htmlFor="email">Email</label>
+                <label htmlFor="email">Email*</label>
                 <input
                   id="email"
                   type="email"
