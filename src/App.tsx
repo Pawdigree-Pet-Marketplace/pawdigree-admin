@@ -4,47 +4,38 @@ import { AdminSidebar } from "./components/admin/AdminSidebar";
 import { AdminTopbar } from "./components/admin/AdminTopbar";
 import { AdminBottomNav } from "./components/admin/AdminBottomNav";
 import { AdminDashboard } from "./pages/AdminDashboard";
+import { CategoriesManagement } from "./pages/CategoriesManagement";
+import { ListingApprovalQueue } from "./pages/ListingApprovalQueue";
 import AdminForm from "./components/AdminForm.tsx";
+
+const PAGE_INFO: Record<string, { title: string; breadcrumb: string }> = {
+  "/admin/listings/categories": { title: "Vendor Categories", breadcrumb: "Admin / Listings / Categories" },
+  "/admin/listings/approval": { title: "Listing Approval Queue", breadcrumb: "Admin / Listings / Approval Queue" },
+};
+
 function Layout() {
   const [open, setOpen] = useState(false);
   const location = useLocation();
-
-  return (
-    <>
-      <AdminSidebar
-        isOpen={open}
-        onClose={() => setOpen(false)}
-        currentPath={location.pathname}
-      />
-      <AdminTopbar
-        onMenuClick={() => setOpen(true)}
-        title="Admin Dashboard"
-        breadcrumb="Admin / Dashboard"
-      />
-      <div className="admin-topbar-spacer" />
-      <div className="admin-page-content">
-        <Routes>
-          <Route path="/" element={<AdminDashboard />} />
-          <Route path="/dashboard" element={<AdminDashboard />} />
-          <Route path="/admin" element={<AdminDashboard />} />
-          <Route path="/admin/dashboard" element={<AdminDashboard />} />
-          <Route path="/adminForm" element={<AdminForm />} />
-          {/* Fallback - shows dashboard for any other /admin/* link until you create real pages */}
-          <Route path="/admin/:page" element={<AdminDashboard />} />
-          <Route path="*" element={<AdminDashboard />} />
-        </Routes>
-      </div>
-      <AdminBottomNav currentPath={location.pathname} />
-    </>
-  );
+  const page = PAGE_INFO[location.pathname] || { title: "Admin Dashboard", breadcrumb: "Admin / Dashboard" };
+  return <>
+    <AdminSidebar isOpen={open} onClose={() => setOpen(false)} currentPath={location.pathname} />
+    <AdminTopbar onMenuClick={() => setOpen(true)} title={page.title} breadcrumb={page.breadcrumb} />
+    <div className="admin-topbar-spacer" />
+    <div className="admin-page-content">
+      <Routes>
+        <Route path="/" element={<AdminDashboard />} />
+        <Route path="/dashboard" element={<AdminDashboard />} />
+        <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/admin/dashboard" element={<AdminDashboard />} />
+        <Route path="/adminForm" element={<AdminForm />} />
+        <Route path="/admin/listings/categories" element={<CategoriesManagement />} />
+        <Route path="/admin/listings/approval" element={<ListingApprovalQueue />} />
+        <Route path="*" element={<AdminDashboard />} />
+      </Routes>
+    </div>
+    <AdminBottomNav currentPath={location.pathname} />
+  </>;
 }
 
-function App() {
-  return (
-    <BrowserRouter>
-      <Layout />
-    </BrowserRouter>
-  );
-}
-
+function App() { return <BrowserRouter><Layout /></BrowserRouter>; }
 export default App;
