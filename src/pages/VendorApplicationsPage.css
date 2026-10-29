@@ -1244,3 +1244,65 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+
+/* Vendor applications pagination */
+.vendor-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 16px 0 24px;
+  color: #2C302F;
+  font-size: 14px;
+}
+
+.vendor-pagination button {
+  padding: 9px 18px;
+  border: 1px solid #216C68;
+  border-radius: 8px;
+  background-color: #FFFFFF;
+  color: #216C68;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.vendor-pagination button:hover:not(:disabled) {
+  background-color: #216C68;
+  color: #FFFFFF;
+}
+
+.vendor-pagination button:focus-visible {
+  outline: 3px solid rgba(33, 108, 104, 0.3);
+  outline-offset: 2px;
+}
+
+.vendor-pagination button:disabled {
+  border-color: #D5DEDC;
+  background-color: #F1F4F3;
+  color: #9AA6A3;
+  cursor: not-allowed;
+}
+
+.vendor-pagination span {
+  min-width: 60px;
+  text-align: center;
+  font-weight: 600;
+}
+
+/* Smaller screens */
+@media (max-width: 480px) {
+  .vendor-pagination {
+    gap: 8px;
+  }
+
+  .vendor-pagination button {
+    padding: 8px 12px;
+  }
+}
+
