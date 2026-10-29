@@ -1,5 +1,11 @@
-
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  adminApi,
+  type VendorApplicationApi,
+  type VendorApiStatus,
+  type VendorDecision,
+} from "../services/adminApi";
+import { ApiError } from "../services/api";
 import {
   Search,
   Eye,
@@ -21,10 +27,12 @@ type VendorStatus =
   | "Pending"
   | "Approved"
   | "Changes Requested"
-  | "Suspended";
-
+  | "Suspended"
+  | "Rejected"
+  | "Draft";
+  
 type VendorApplication = {
-  id: number;
+  id: string;
   businessName: string;
   ownerName: string;
   email: string;
@@ -32,95 +40,56 @@ type VendorApplication = {
   address: string;
   categories: string[];
   documents: string[];
+  images: Array<{ id: string | number; image?: string; alt_text?: string }>;
   submittedDate: string;
   status: VendorStatus;
   reviewMessage: string;
 };
 
-const initialApplications: VendorApplication[] = [
-  {
-    id: 1,
-    businessName: "Kololo Pet Clinic",
-    ownerName: "Sarah Nakato",
-    email: "sarah@example.com",
-    phone: "+256 700 123456",
-    address: "Kololo, Kampala, Uganda",
-    categories: ["Veterinary Services", "Pet Care"],
-    documents: [
-      "Business Registration Certificate.pdf",
-      "Veterinary Licence.pdf",
-      "Owner Identification.pdf",
-    ],
-    submittedDate: "2026-10-10",
-    status: "Pending",
-    reviewMessage: "",
-  },
-  {
-    id: 2,
-    businessName: "Furry Friends Shop",
-    ownerName: "David Okello",
-    email: "david@example.com",
-    phone: "+256 701 234567",
-    address: "Ntinda, Kampala, Uganda",
-    categories: ["Pet Merchandise", "Pet Food"],
-    documents: [
-      "Business Registration Certificate.pdf",
-      "Owner Identification.pdf",
-    ],
-    submittedDate: "2026-10-11",
-    status: "Pending",
-    reviewMessage: "",
-  },
-  {
-    id: 3,
-    businessName: "Nakawa Kennels",
-    ownerName: "James Mugisha",
-    email: "james@example.com",
-    phone: "+256 702 345678",
-    address: "Nakawa, Kampala, Uganda",
-    categories: ["Pet Sales", "Pet Boarding"],
-    documents: [
-      "Business Registration Certificate.pdf",
-      "Animal Care Documents.pdf",
-    ],
-    submittedDate: "2026-10-08",
-    status: "Approved",
-    reviewMessage: "",
-  },
-  {
-    id: 4,
-    businessName: "VetCare Bugolobi",
-    ownerName: "Grace Atim",
-    email: "grace@example.com",
-    phone: "+256 703 456789",
-    address: "Bugolobi, Kampala, Uganda",
-    categories: ["Veterinary Services"],
-    documents: [
-      "Business Registration Certificate.pdf",
-      "Veterinary Licence.pdf",
-    ],
-    submittedDate: "2026-10-06",
-    status: "Suspended",
-    reviewMessage: "Updated verification is required.",
-  },
-  {
-    id: 5,
-    businessName: "Happy Paws Uganda",
-    ownerName: "Peter Kato",
-    email: "peter@example.com",
-    phone: "+256 704 567890",
-    address: "Kira, Wakiso, Uganda",
-    categories: ["Pet Care", "Pet Grooming"],
-    documents: [
-      "Business Registration Certificate.pdf",
-      "Owner Identification.pdf",
-    ],
-    submittedDate: "2026-10-12",
-    status: "Changes Requested",
+function mapApiStatus(status: VendorApiStatus): VendorStatus {
+  switch (status) {
+    case "changes_requested":
+      return "Changes Requested";
+    case "approved":
+      return "Approved";
+    case "suspended":
+      return "Suspended";
+    case "rejected":
+      return "Rejected";
+    case "draft":
+      return "Draft";
+    case "pending":
+    default:
+      return "Pending";
+  }
+}
+
+function mapVendorApplication(
+  application: VendorApplicationApi,
+): VendorApplication {
+  return {
+    id: application.id,
+    businessName: application.name,
+    ownerName: application.vendor_username || "Owner not provided",
+    email: application.email || application.vendor_email || "Email not provided",
+    phone: application.contact || "Phone not provided",
+    address: [application.address, application.city_district]
+      .filter(Boolean)
+      .join(", ") || "Address not provided",
+    categories: (application.categories ?? []).map(
+  (item) => item.name || "Unnamed category",
+),
+    // The current business API does not provide a document list.
+    documents: [],
+    images: application.images ?? [],
+    submittedDate: application.created_at
+      ? new Date(application.created_at).toLocaleDateString()
+      : "Date not provided",
+    status: mapApiStatus(application.verification_status),
     reviewMessage:
-      "Please provide the missing business verification document.",
-  },
-];
+      application.decision_reason || application.vendor_response || "",
+  };
+}
 
 const statusOptions: Array<"All" | VendorStatus> = [
   "All",
@@ -128,19 +97,54 @@ const statusOptions: Array<"All" | VendorStatus> = [
   "Approved",
   "Changes Requested",
   "Suspended",
+  "Rejected",
+  "Draft",
 ];
 
-export function VendorApplicationsPage() {
-  const [applications, setApplications] =
-    useState<VendorApplication[]>(initialApplications);
 
+export function VendorApplicationsPage() {
+  const [applications, setApplications] = useState<VendorApplication[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] =
     useState<"All" | VendorStatus>("All");
 
-  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [reviewMessage, setReviewMessage] = useState("");
   const [feedback, setFeedback] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [submittingDecision, setSubmittingDecision] = useState(false);
+  const [error, setError] = useState("");
+  const [page, setPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [nextPage, setNextPage] = useState<string | null>(null);
+  const [previousPage, setPreviousPage] = useState<string | null>(null);
+
+  const loadApplications = useCallback(async () => {
+    setLoading(true);
+    setError("");
+
+    try {
+      const response = await adminApi.getVendorApplications("all", page);
+
+      setApplications(response.results.map(mapVendorApplication));
+      setTotalCount(response.count);
+      setNextPage(response.next);
+      setPreviousPage(response.previous);
+    } catch (err) {
+      setError(
+        err instanceof ApiError
+          ? err.message
+          : "Unable to load vendor applications. Please try again.",
+      );
+      setApplications([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [page]);
+
+  useEffect(() => {
+    void loadApplications();
+  }, [loadApplications]);
 
   const filteredApplications = useMemo(() => {
     const search = searchTerm.toLowerCase().trim();
@@ -167,7 +171,7 @@ export function VendorApplicationsPage() {
     null;
 
   const counts = {
-    total: applications.length,
+    total: totalCount,
     pending: applications.filter(
       (item) => item.status === "Pending"
     ).length,
@@ -193,88 +197,83 @@ export function VendorApplicationsPage() {
     setReviewMessage("");
     setFeedback("");
   }
-
-  function updateStatus(
-    id: number,
-    status: VendorStatus,
-    message = ""
+   
+  async function submitDecision(
+    action: VendorDecision,
+    successStatus: VendorStatus,
+    reason = "",
   ) {
-    const vendor = applications.find((item) => item.id === id);
+    if (!selectedApplication || submittingDecision) return;
 
-    if (!vendor) return;
-
-    setApplications((currentApplications) =>
-      currentApplications.map((application) =>
-        application.id === id
-          ? {
-              ...application,
-              status,
-              reviewMessage: message,
-            }
-          : application
-      )
-    );
-
-    setFeedback(
-      `${vendor.businessName} status updated to "${status}".`
-    );
-
-    setSelectedId(null);
-    setReviewMessage("");
-  }
-
-  function requestChanges() {
-    if (!selectedApplication) return;
-
-    if (!reviewMessage.trim()) {
+    if (
+      (action === "request_changes" || action === "suspend") &&
+      !reason.trim()
+    ) {
       setFeedback(
-        "Please explain what the vendor needs to change."
+        action === "request_changes"
+          ? "Please explain what the vendor needs to change."
+          : "Please provide a reason for suspending this vendor.",
       );
       return;
     }
 
-    updateStatus(
-      selectedApplication.id,
+    if (action === "suspend") {
+      const confirmed = window.confirm(
+        `Are you sure you want to suspend ${selectedApplication.businessName}?`,
+      );
+      if (!confirmed) return;
+    }
+
+    setSubmittingDecision(true);
+    setFeedback("");
+
+    try {
+      await adminApi.decideVendorApplication(
+        selectedApplication.id,
+        action,
+        reason.trim() || undefined,
+      );
+
+      setFeedback(
+        `${selectedApplication.businessName} was successfully updated to "${successStatus}".`,
+      );
+      setSelectedId(null);
+      setReviewMessage("");
+
+      await loadApplications();
+    } catch (err) {
+      setFeedback(
+        err instanceof ApiError
+          ? err.message
+          : "The decision could not be submitted. Please try again.",
+      );
+    } finally {
+      setSubmittingDecision(false);
+    }
+  }
+
+  function requestChanges() {
+    void submitDecision(
+      "request_changes",
       "Changes Requested",
-      reviewMessage.trim()
+      reviewMessage,
     );
   }
 
   function suspendVendor() {
-    if (!selectedApplication) return;
-
-    const confirmed = window.confirm(
-      `Are you sure you want to suspend ${selectedApplication.businessName}?`
-    );
-
-    if (!confirmed) return;
-
-    updateStatus(
-      selectedApplication.id,
+    void submitDecision(
+      "suspend",
       "Suspended",
-      reviewMessage.trim() ||
-        "Vendor suspended by an administrator."
+      reviewMessage,
     );
   }
 
   function approveVendor() {
-    if (!selectedApplication) return;
-
-    updateStatus(
-      selectedApplication.id,
-      "Approved",
-      ""
-    );
+    void submitDecision("approve", "Approved");
   }
 
   function reapproveVendor() {
-    if (!selectedApplication) return;
-
-    updateStatus(
-      selectedApplication.id,
-      "Approved",
-      ""
-    );
+    void submitDecision("reapprove", "Approved");
   }
 
   function getStatusClass(status: VendorStatus) {
@@ -310,6 +309,27 @@ export function VendorApplicationsPage() {
           <ShieldCheck size={30} />
         </div>
       </div>
+
+            {loading && (
+        <div className="vendor-feedback" role="status">
+          Loading vendor applications...
+        </div>
+      )}
+
+      {!loading && error && (
+        <div
+          className="vendor-feedback vendor-feedback-error"
+          role="alert"
+        >
+          <span>{error}</span>
+          <button
+            type="button"
+            onClick={() => void loadApplications()}
+          >
+            Try again
+          </button>
+        </div>
+      )}
 
       {feedback && (
         <div className="vendor-feedback" role="status">
@@ -496,6 +516,26 @@ export function VendorApplicationsPage() {
         </div>
       </section>
 
+            <div className="vendor-pagination">
+        <button
+          type="button"
+          disabled={!previousPage || loading}
+          onClick={() => setPage((currentPage) => currentPage - 1)}
+        >
+          Previous
+        </button>
+
+        <span>Page {page}</span>
+
+        <button
+          type="button"
+          disabled={!nextPage || loading}
+          onClick={() => setPage((currentPage) => currentPage + 1)}
+        >
+          Next
+        </button>
+      </div>
+
       {selectedApplication && (
         <div
           className="vendor-review-overlay"
@@ -665,44 +705,67 @@ export function VendorApplicationsPage() {
               </p>
             </div>
 
-            {/* All four actions are always visible. */}
-            <div className="vendor-review-actions">
-              <button
-                type="button"
-                className="vendor-action-button approve-action"
-                onClick={approveVendor}
-              >
-                <CheckCircle size={17} />
-                Approve
-              </button>
+                  <div className="vendor-review-actions">
+              {selectedApplication.status === "Pending" && (
+                <>
+                  <button
+                    type="button"
+                    className="vendor-action-button approve-action"
+                    onClick={approveVendor}
+                    disabled={submittingDecision}
+                  >
+                    <CheckCircle size={17} />
+                    Approve
+                  </button>
 
-              <button
-                type="button"
-                className="vendor-action-button changes-action"
-                onClick={requestChanges}
-              >
-                <FileText size={17} />
-                Request Changes
-              </button>
+                  <button
+                    type="button"
+                    className="vendor-action-button changes-action"
+                    onClick={requestChanges}
+                    disabled={submittingDecision}
+                  >
+                    <FileText size={17} />
+                    Request Changes
+                  </button>
+                </>
+              )}
 
-              <button
-                type="button"
-                className="vendor-action-button suspend-action"
-                onClick={suspendVendor}
-              >
-                <XCircle size={17} />
-                Suspend
-              </button>
+              {selectedApplication.status === "Approved" && (
+                <>
+                  <button
+                    type="button"
+                    className="vendor-action-button changes-action"
+                    onClick={requestChanges}
+                    disabled={submittingDecision}
+                  >
+                    <FileText size={17} />
+                    Request Changes
+                  </button>
 
-              <button
-                type="button"
-                className="vendor-action-button approve-action"
-                onClick={reapproveVendor}
-              >
-                <RotateCcw size={17} />
-                Re-approve
-              </button>
-            </div>
+                  <button
+                    type="button"
+                    className="vendor-action-button suspend-action"
+                    onClick={suspendVendor}
+                    disabled={submittingDecision}
+                  >
+                    <XCircle size={17} />
+                    Suspend
+                  </button>
+                </>
+              )}
+
+              {selectedApplication.status === "Suspended" && (
+                <button
+                  type="button"
+                  className="vendor-action-button approve-action"
+                  onClick={reapproveVendor}
+                  disabled={submittingDecision}
+                >
+                  <RotateCcw size={17} />
+                  Re-approve
+                </button>
+              )}
+                       </div>
           </section>
         </div>
       )}
