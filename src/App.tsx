@@ -1,6 +1,11 @@
 
 import { useState } from "react";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  useLocation,
+} from "react-router-dom";
 
 import { AdminSidebar } from "./components/admin/AdminSidebar";
 import { AdminTopbar } from "./components/admin/AdminTopbar";
@@ -10,8 +15,9 @@ import { AdminDashboard } from "./pages/AdminDashboard";
 import { VendorApplicationsPage } from "./pages/VendorApplicationsPage";
 import { CategoriesManagement } from "./pages/CategoriesManagement";
 import { ListingApprovalQueue } from "./pages/ListingApprovalQueue";
-
 import AdminForm from "./components/AdminForm";
+
+import AdminLoginPage from "./pages/auth/AdminLoginPage";
 
 const PAGE_INFO: Record<string, { title: string; breadcrumb: string }> = {
   "/admin/listings/categories": {
@@ -35,6 +41,11 @@ const PAGE_INFO: Record<string, { title: string; breadcrumb: string }> = {
 function Layout() {
   const [open, setOpen] = useState(false);
   const location = useLocation();
+
+  // Login has its own layout without admin navigation.
+  if (location.pathname === "/login") {
+    return <AdminLoginPage />;
+  }
 
   const page = PAGE_INFO[location.pathname] || {
     title: "Admin Dashboard",
@@ -63,24 +74,16 @@ function Layout() {
           <Route path="/dashboard" element={<AdminDashboard />} />
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
-
-          <Route
-            path="/admin/vendors"
-            element={<VendorApplicationsPage />}
-          />
-
+          <Route path="/admin/vendors" element={<VendorApplicationsPage />} />
           <Route
             path="/admin/listings/categories"
             element={<CategoriesManagement />}
           />
-
           <Route
             path="/admin/listings/approval"
             element={<ListingApprovalQueue />}
           />
-
           <Route path="/adminForm" element={<AdminForm />} />
-
           <Route path="*" element={<AdminDashboard />} />
         </Routes>
       </div>

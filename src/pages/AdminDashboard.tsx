@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import {
   Users,
   Store,
@@ -320,7 +321,7 @@ export const AdminDashboard = () => {
         <div className="dash-table-block">
           <div className="dash-table-header">
             <h4>Recent Flagged Accounts</h4>
-            <a href="/flagged">View all ›</a>
+            <Link to="/admin/flagged">View all ›</Link>
           </div>
           <div className="dash-card dash-table">
             <div className="dash-tr dash-tr-head">
@@ -340,7 +341,7 @@ export const AdminDashboard = () => {
         <div className="dash-table-block">
           <div className="dash-table-header">
             <h4>Pending Vendor Approvals</h4>
-            <a href="/vendors">View all ›</a>
+            <Link to="/admin/vendors">View all ›</Link>
           </div>
           <div className="dash-card dash-table">
             <div className="dash-tr dash-tr-head dash-tr-vendor">

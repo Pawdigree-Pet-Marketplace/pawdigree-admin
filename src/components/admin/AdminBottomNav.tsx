@@ -1,4 +1,11 @@
-import { LayoutDashboard, Users, Store, Settings } from "lucide-react";
+
+import { Link } from "react-router-dom";
+import {
+  LayoutDashboard,
+  Users,
+  Store,
+  Settings,
+} from "lucide-react";
 import "./AdminBottomNav.css";
 
 export const AdminBottomNav = ({
@@ -12,18 +19,24 @@ export const AdminBottomNav = ({
     { label: "Vendors", path: "/admin/vendors", Icon: Store },
     { label: "Settings", path: "/admin/settings", Icon: Settings },
   ];
+
   return (
     <div className="admin-bottom-wrapper">
       <nav className="admin-bottom-nav">
         {items.map(({ label, path, Icon }) => (
-          <a
+          <Link
             key={path}
-            href={path}
-            className={`admin-bottom-link ${currentPath === path ? "active" : ""}`}
+            to={path}
+            className={`admin-bottom-link ${
+              currentPath === path ? "active" : ""
+            }`}
           >
-            <Icon size={20} strokeWidth={currentPath === path ? 2.5 : 1.8} />
+            <Icon
+              size={20}
+              strokeWidth={currentPath === path ? 2.5 : 1.8}
+            />
             <span>{label}</span>
-          </a>
+          </Link>
         ))}
       </nav>
     </div>
