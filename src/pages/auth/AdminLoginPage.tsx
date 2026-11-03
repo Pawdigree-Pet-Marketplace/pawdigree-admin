@@ -1,26 +1,37 @@
 
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import AdminLoginForm from "../../components/auth/AdminLoginForm";
+import { adminLogin } from "../../services/adminAuthService";
 import "./AdminLoginPage.css";
 
 function AdminLoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const navigate = useNavigate();
 
-  function handleLogin(email: string, password: string) {
-    // Backend authentication will be connected here.
-    // We are building the UI independently first.
-    console.log("Login submitted:", { email, password });
-
+  async function handleLogin(email: string, password: string) {
     setError("");
     setIsLoading(true);
 
-    // Temporary UI demonstration only.
-    // Remove this when the real API integration is implemented.
-    setTimeout(() => {
+    try {
+      const tokens = await adminLogin(email, password);
+
+      // Save tokens for authenticated API requests.
+      localStorage.setItem("access", tokens.access);
+      localStorage.setItem("refresh", tokens.refresh);
+
+      // Open the admin dashboard after successful authentication.
+      navigate("/admin/dashboard", { replace: true });
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Login failed. Please try again.",
+      );
+    } finally {
       setIsLoading(false);
-      setError("Authentication is not connected yet.");
-    }, 800);
+    }
   }
 
   return (

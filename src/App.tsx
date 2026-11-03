@@ -5,6 +5,8 @@ import {
   Routes,
   Route,
   useLocation,
+  useNavigate,
+  Navigate,
 } from "react-router-dom";
 
 import { AdminSidebar } from "./components/admin/AdminSidebar";
@@ -41,10 +43,31 @@ const PAGE_INFO: Record<string, { title: string; breadcrumb: string }> = {
 function Layout() {
   const [open, setOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
 
-  // Login has its own layout without admin navigation.
+  // Display login without the admin layout.
   if (location.pathname === "/login") {
     return <AdminLoginPage />;
+  }
+
+  // Check whether an access token exists.
+  const accessToken =
+    localStorage.getItem("access") ||
+    localStorage.getItem("accessToken");
+
+  // Redirect unauthenticated users to login.
+  if (!accessToken) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // Handle admin logout.
+  function handleLogout() {
+    localStorage.removeItem("access");
+    localStorage.removeItem("refresh");
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+
+    navigate("/login", { replace: true });
   }
 
   const page = PAGE_INFO[location.pathname] || {
@@ -62,6 +85,7 @@ function Layout() {
 
       <AdminTopbar
         onMenuClick={() => setOpen(true)}
+        onLogout={handleLogout}
         title={page.title}
         breadcrumb={page.breadcrumb}
       />
@@ -74,17 +98,28 @@ function Layout() {
           <Route path="/dashboard" element={<AdminDashboard />} />
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
-          <Route path="/admin/vendors" element={<VendorApplicationsPage />} />
+
+          <Route
+            path="/admin/vendors"
+            element={<VendorApplicationsPage />}
+          />
+
           <Route
             path="/admin/listings/categories"
             element={<CategoriesManagement />}
           />
+
           <Route
             path="/admin/listings/approval"
             element={<ListingApprovalQueue />}
           />
+
           <Route path="/adminForm" element={<AdminForm />} />
-          <Route path="*" element={<AdminDashboard />} />
+
+          <Route
+            path="*"
+            element={<Navigate to="/admin/dashboard" replace />}
+          />
         </Routes>
       </div>
 
