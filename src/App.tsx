@@ -20,6 +20,7 @@ import { ListingApprovalQueue } from "./pages/ListingApprovalQueue";
 
 import AdminForm from "./components/AdminForm";
 import AdminLoginPage from "./pages/auth/AdminLoginPage";
+import AdminAccessGate from "./components/auth/AdminAccessGate";
 
 const PAGE_INFO: Record<string, { title: string; breadcrumb: string }> = {
   "/admin/listings/categories": {
@@ -71,7 +72,8 @@ function Layout() {
     breadcrumb: "Admin / Dashboard",
   };
 
-  return (
+return (
+  <AdminAccessGate>
     <>
       <AdminSidebar
         isOpen={open}
@@ -121,9 +123,9 @@ function Layout() {
 
       <AdminBottomNav currentPath={location.pathname} />
     </>
-  );
+  </AdminAccessGate>
+);
 }
-
 function App() {
   return (
     <BrowserRouter>
