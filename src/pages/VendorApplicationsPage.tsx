@@ -30,7 +30,7 @@ type VendorStatus =
   | "Suspended"
   | "Rejected"
   | "Draft";
-  
+
 type VendorApplication = {
   id: string;
   businessName: string;
@@ -71,14 +71,16 @@ function mapVendorApplication(
     id: application.id,
     businessName: application.name,
     ownerName: application.vendor_username || "Owner not provided",
-    email: application.email || application.vendor_email || "Email not provided",
+    email:
+      application.email || application.vendor_email || "Email not provided",
     phone: application.contact || "Phone not provided",
-    address: [application.address, application.city_district]
-      .filter(Boolean)
-      .join(", ") || "Address not provided",
+    address:
+      [application.address, application.city_district]
+        .filter(Boolean)
+        .join(", ") || "Address not provided",
     categories: (application.categories ?? []).map(
-  (item) => item.name || "Unnamed category",
-),
+      (item) => item.name || "Unnamed category",
+    ),
     // The current business API does not provide a document list.
     documents: [],
     images: application.images ?? [],
@@ -101,12 +103,10 @@ const statusOptions: Array<"All" | VendorStatus> = [
   "Draft",
 ];
 
-
 export function VendorApplicationsPage() {
   const [applications, setApplications] = useState<VendorApplication[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] =
-    useState<"All" | VendorStatus>("All");
+  const [statusFilter, setStatusFilter] = useState<"All" | VendorStatus>("All");
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [reviewMessage, setReviewMessage] = useState("");
@@ -120,9 +120,6 @@ export function VendorApplicationsPage() {
   const [previousPage, setPreviousPage] = useState<string | null>(null);
 
   const loadApplications = useCallback(async () => {
-    setLoading(true);
-    setError("");
-
     try {
       const response = await adminApi.getVendorApplications("all", page);
 
@@ -143,8 +140,40 @@ export function VendorApplicationsPage() {
   }, [page]);
 
   useEffect(() => {
-    void loadApplications();
-  }, [loadApplications]);
+    let isActive = true;
+
+    adminApi
+      .getVendorApplications("all", page)
+      .then((response) => {
+        if (!isActive) return;
+
+        setApplications(response.results.map(mapVendorApplication));
+        setTotalCount(response.count);
+        setNextPage(response.next);
+        setPreviousPage(response.previous);
+        setError("");
+      })
+      .catch((err) => {
+        if (!isActive) return;
+
+        setError(
+          err instanceof ApiError
+            ? err.message
+            : "Unable to load vendor applications. Please try again.",
+        );
+
+        setApplications([]);
+      })
+      .finally(() => {
+        if (isActive) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, [page]);
 
   const filteredApplications = useMemo(() => {
     const search = searchTerm.toLowerCase().trim();
@@ -155,35 +184,28 @@ export function VendorApplicationsPage() {
         application.ownerName.toLowerCase().includes(search) ||
         application.email.toLowerCase().includes(search) ||
         application.categories.some((category) =>
-          category.toLowerCase().includes(search)
+          category.toLowerCase().includes(search),
         );
 
       const matchesStatus =
-        statusFilter === "All" ||
-        application.status === statusFilter;
+        statusFilter === "All" || application.status === statusFilter;
 
       return matchesSearch && matchesStatus;
     });
   }, [applications, searchTerm, statusFilter]);
 
   const selectedApplication =
-    applications.find((application) => application.id === selectedId) ??
-    null;
+    applications.find((application) => application.id === selectedId) ?? null;
 
   const counts = {
     total: totalCount,
-    pending: applications.filter(
-      (item) => item.status === "Pending"
-    ).length,
-    approved: applications.filter(
-      (item) => item.status === "Approved"
-    ).length,
+    pending: applications.filter((item) => item.status === "Pending").length,
+    approved: applications.filter((item) => item.status === "Approved").length,
     changesRequested: applications.filter(
-      (item) => item.status === "Changes Requested"
+      (item) => item.status === "Changes Requested",
     ).length,
-    suspended: applications.filter(
-      (item) => item.status === "Suspended"
-    ).length,
+    suspended: applications.filter((item) => item.status === "Suspended")
+      .length,
   };
 
   function openReview(application: VendorApplication) {
@@ -197,7 +219,7 @@ export function VendorApplicationsPage() {
     setReviewMessage("");
     setFeedback("");
   }
-   
+
   async function submitDecision(
     action: VendorDecision,
     successStatus: VendorStatus,
@@ -240,6 +262,8 @@ export function VendorApplicationsPage() {
       setSelectedId(null);
       setReviewMessage("");
 
+      setLoading(true);
+      setError("");
       await loadApplications();
     } catch (err) {
       setFeedback(
@@ -253,19 +277,11 @@ export function VendorApplicationsPage() {
   }
 
   function requestChanges() {
-    void submitDecision(
-      "request_changes",
-      "Changes Requested",
-      reviewMessage,
-    );
+    void submitDecision("request_changes", "Changes Requested", reviewMessage);
   }
 
   function suspendVendor() {
-    void submitDecision(
-      "suspend",
-      "Suspended",
-      reviewMessage,
-    );
+    void submitDecision("suspend", "Suspended", reviewMessage);
   }
 
   function approveVendor() {
@@ -295,13 +311,11 @@ export function VendorApplicationsPage() {
     <div className="vendor-applications-page">
       <div className="vendor-page-heading">
         <div>
-          <p className="vendor-eyebrow">
-            ADMINISTRATION / VENDOR MANAGEMENT
-          </p>
+          <p className="vendor-eyebrow">ADMINISTRATION / VENDOR MANAGEMENT</p>
           <h1>Vendor Applications</h1>
           <p className="vendor-page-description">
-            Review vendor applications, verify documents, and manage
-            vendor approval status.
+            Review vendor applications, verify documents, and manage vendor
+            approval status.
           </p>
         </div>
 
@@ -310,21 +324,22 @@ export function VendorApplicationsPage() {
         </div>
       </div>
 
-            {loading && (
+      {loading && (
         <div className="vendor-feedback" role="status">
           Loading vendor applications...
         </div>
       )}
 
       {!loading && error && (
-        <div
-          className="vendor-feedback vendor-feedback-error"
-          role="alert"
-        >
+        <div className="vendor-feedback vendor-feedback-error" role="alert">
           <span>{error}</span>
           <button
             type="button"
-            onClick={() => void loadApplications()}
+            onClick={() => {
+              setLoading(true);
+              setError("");
+              void loadApplications();
+            }}
           >
             Try again
           </button>
@@ -391,9 +406,7 @@ export function VendorApplicationsPage() {
         <div className="vendor-list-heading">
           <div>
             <h2>Vendor Management Queue</h2>
-            <p>
-              Review applications and manage vendor accounts.
-            </p>
+            <p>Review applications and manage vendor accounts.</p>
           </div>
 
           <span className="vendor-result-count">
@@ -409,9 +422,7 @@ export function VendorApplicationsPage() {
               type="search"
               placeholder="Search business, owner, email or category..."
               value={searchTerm}
-              onChange={(event) =>
-                setSearchTerm(event.target.value)
-              }
+              onChange={(event) => setSearchTerm(event.target.value)}
               aria-label="Search vendor applications"
             />
           </div>
@@ -420,9 +431,7 @@ export function VendorApplicationsPage() {
             className="vendor-status-filter"
             value={statusFilter}
             onChange={(event) =>
-              setStatusFilter(
-                event.target.value as "All" | VendorStatus
-              )
+              setStatusFilter(event.target.value as "All" | VendorStatus)
             }
             aria-label="Filter by vendor status"
           >
@@ -456,9 +465,7 @@ export function VendorApplicationsPage() {
                         <Building2 size={20} />
                       </div>
                       <div>
-                        <strong>
-                          {application.businessName}
-                        </strong>
+                        <strong>{application.businessName}</strong>
                         <span>{application.email}</span>
                       </div>
                     </div>
@@ -469,10 +476,7 @@ export function VendorApplicationsPage() {
                   <td>
                     <div className="vendor-category-list">
                       {application.categories.map((category) => (
-                        <span
-                          className="vendor-category-tag"
-                          key={category}
-                        >
+                        <span className="vendor-category-tag" key={category}>
                           {category}
                         </span>
                       ))}
@@ -484,7 +488,7 @@ export function VendorApplicationsPage() {
                   <td>
                     <span
                       className={`vendor-status-badge ${getStatusClass(
-                        application.status
+                        application.status,
                       )}`}
                     >
                       {application.status}
@@ -516,11 +520,15 @@ export function VendorApplicationsPage() {
         </div>
       </section>
 
-            <div className="vendor-pagination">
+      <div className="vendor-pagination">
         <button
           type="button"
           disabled={!previousPage || loading}
-          onClick={() => setPage((currentPage) => currentPage - 1)}
+          onClick={() => {
+            setLoading(true);
+            setError("");
+            setPage((currentPage) => currentPage - 1);
+          }}
         >
           Previous
         </button>
@@ -530,7 +538,11 @@ export function VendorApplicationsPage() {
         <button
           type="button"
           disabled={!nextPage || loading}
-          onClick={() => setPage((currentPage) => currentPage + 1)}
+          onClick={() => {
+            setLoading(true);
+            setError("");
+            setPage((currentPage) => currentPage + 1);
+          }}
         >
           Next
         </button>
@@ -553,12 +565,8 @@ export function VendorApplicationsPage() {
           >
             <div className="vendor-review-header">
               <div>
-                <p className="vendor-eyebrow">
-                  VENDOR APPLICATION
-                </p>
-                <h2 id="vendor-review-title">
-                  Review Vendor
-                </h2>
+                <p className="vendor-eyebrow">VENDOR APPLICATION</p>
+                <h2 id="vendor-review-title">Review Vendor</h2>
               </div>
 
               <button
@@ -579,7 +587,7 @@ export function VendorApplicationsPage() {
                 <h3>{selectedApplication.businessName}</h3>
                 <span
                   className={`vendor-status-badge ${getStatusClass(
-                    selectedApplication.status
+                    selectedApplication.status,
                   )}`}
                 >
                   {selectedApplication.status}
@@ -594,9 +602,7 @@ export function VendorApplicationsPage() {
                 <Building2 size={17} />
                 <div>
                   <span>Owner</span>
-                  <strong>
-                    {selectedApplication.ownerName}
-                  </strong>
+                  <strong>{selectedApplication.ownerName}</strong>
                 </div>
               </div>
 
@@ -628,9 +634,7 @@ export function VendorApplicationsPage() {
                 <Clock size={17} />
                 <div>
                   <span>Date Submitted</span>
-                  <strong>
-                    {selectedApplication.submittedDate}
-                  </strong>
+                  <strong>{selectedApplication.submittedDate}</strong>
                 </div>
               </div>
             </div>
@@ -638,16 +642,11 @@ export function VendorApplicationsPage() {
             <div className="vendor-detail-section">
               <h3>Requested Categories</h3>
               <div className="vendor-category-list">
-                {selectedApplication.categories.map(
-                  (category) => (
-                    <span
-                      className="vendor-category-tag"
-                      key={category}
-                    >
-                      {category}
-                    </span>
-                  )
-                )}
+                {selectedApplication.categories.map((category) => (
+                  <span className="vendor-category-tag" key={category}>
+                    {category}
+                  </span>
+                ))}
               </div>
             </div>
 
@@ -655,22 +654,17 @@ export function VendorApplicationsPage() {
               <h3>Submitted Documents</h3>
 
               <div className="vendor-documents-list">
-                {selectedApplication.documents.map(
-                  (document) => (
-                    <div
-                      className="vendor-document-item"
-                      key={document}
-                    >
-                      <FileText size={19} />
-                      <span>{document}</span>
-                    </div>
-                  )
-                )}
+                {selectedApplication.documents.map((document) => (
+                  <div className="vendor-document-item" key={document}>
+                    <FileText size={19} />
+                    <span>{document}</span>
+                  </div>
+                ))}
               </div>
 
               <p className="vendor-document-note">
-                These are sample document names. Document viewing
-                and verification must be connected to the backend.
+                These are sample document names. Document viewing and
+                verification must be connected to the backend.
               </p>
             </div>
 
@@ -692,20 +686,18 @@ export function VendorApplicationsPage() {
               <textarea
                 id="vendor-review-message"
                 value={reviewMessage}
-                onChange={(event) =>
-                  setReviewMessage(event.target.value)
-                }
+                onChange={(event) => setReviewMessage(event.target.value)}
                 placeholder="Explain any missing documents or required changes..."
                 rows={3}
               />
 
               <p className="vendor-review-help">
-                Required when requesting changes. You may also add
-                a note before suspending a vendor.
+                Required when requesting changes. You may also add a note before
+                suspending a vendor.
               </p>
             </div>
 
-                  <div className="vendor-review-actions">
+            <div className="vendor-review-actions">
               {selectedApplication.status === "Pending" && (
                 <>
                   <button
@@ -765,7 +757,7 @@ export function VendorApplicationsPage() {
                   Re-approve
                 </button>
               )}
-                       </div>
+            </div>
           </section>
         </div>
       )}
