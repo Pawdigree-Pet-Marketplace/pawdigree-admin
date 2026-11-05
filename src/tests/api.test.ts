@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ApiError, apiRequest, unwrapList } from '../services/api'
+import { adminLogin } from '../services/adminAuthService'
 
 describe('apiRequest', () => {
   beforeEach(() => {
@@ -29,6 +30,32 @@ describe('apiRequest', () => {
     const [url, init] = vi.mocked(fetch).mock.calls[0]
     expect(String(url)).toBe('https://pawdigree-bckd.onrender.com/api/categories/')
     expect(new Headers(init?.headers).get('Authorization')).toBe('Bearer fallback-token')
+  })
+
+  it('normalizes a configured API URL that already includes the /api prefix', async () => {
+    vi.stubEnv('VITE_API_BASE_URL', 'https://api.example.test/api///')
+    vi.resetModules()
+    vi.mocked(fetch).mockResolvedValue(new Response('{}', { status: 200 }))
+
+    const { apiRequest: configuredApiRequest } = await import('../services/api')
+    await configuredApiRequest('/categories/')
+
+    expect(String(vi.mocked(fetch).mock.calls[0][0])).toBe('https://api.example.test/api/categories/')
+    vi.unstubAllEnvs()
+    vi.resetModules()
+  })
+
+  it('sends the admin login request to the Django auth route through the shared helper', async () => {
+    localStorage.setItem('access', 'stale-refresh-or-invalid-token')
+    vi.mocked(fetch).mockResolvedValue(new Response(JSON.stringify({ access: 'access-token', refresh: 'refresh-token' }), { status: 200 }))
+
+    await expect(adminLogin(' admin@example.test ', 'password')).resolves.toEqual({ access: 'access-token', refresh: 'refresh-token' })
+
+    const [url, init] = vi.mocked(fetch).mock.calls[0]
+    expect(String(url)).toBe('https://pawdigree-bckd.onrender.com/api/auth/login/admin/')
+    expect(init?.method).toBe('POST')
+    expect(JSON.parse(String(init?.body))).toEqual({ email: 'admin@example.test', password: 'password' })
+    expect(new Headers(init?.headers).has('Authorization')).toBe(false)
   })
 
   it('returns undefined for 204 and extracts server error messages', async () => {

@@ -1,4 +1,6 @@
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "https://pawdigree-bckd.onrender.com").replace(/\/$/, "");
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "https://pawdigree-bckd.onrender.com")
+  .replace(/\/+$/, "")
+  .replace(/\/api$/i, "");
 
 export type ApiRecord = Record<string, unknown>;
 
@@ -9,14 +11,20 @@ export class ApiError extends Error {
 
 function getAccessToken() { return localStorage.getItem("access") || localStorage.getItem("accessToken") || ""; }
 
-export async function apiRequest<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const headers = new Headers(options.headers);
-  if (options.body && !(options.body instanceof FormData)) headers.set("Content-Type", "application/json");
+export interface ApiRequestOptions extends RequestInit {
+  skipAuth?: boolean;
+}
+
+export async function apiRequest<T>(path: string, options: ApiRequestOptions = {}): Promise<T> {
+  const { skipAuth = false, ...requestOptions } = options;
+  const headers = new Headers(requestOptions.headers);
+  if (requestOptions.body && !(requestOptions.body instanceof FormData)) headers.set("Content-Type", "application/json");
   const token = getAccessToken();
-  if (token) headers.set("Authorization", `Bearer ${token}`);
+  if (skipAuth) headers.delete("Authorization");
+  else if (token) headers.set("Authorization", `Bearer ${token}`);
   let response: Response;
   const endpointPath = path.startsWith("/") ? path : `/${path}`;
-  try { response = await fetch(`${API_BASE_URL}/api${endpointPath}`, { ...options, headers }); }
+  try { response = await fetch(`${API_BASE_URL}/api${endpointPath}`, { ...requestOptions, headers }); }
   catch { throw new ApiError("Could not connect to the server. Check the API URL and try again.", 0); }
   if (!response.ok) {
     let message = `Request failed (${response.status}).`;
