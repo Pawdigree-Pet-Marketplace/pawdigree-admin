@@ -122,16 +122,45 @@ export function VendorApplicationsPage() {
   const [previousPage, setPreviousPage] = useState<string | null>(null);
 
   const loadApplications = useCallback(async () => {
-    try {
-      setError("");
+  try {
+    const response = await adminApi.getVendorApplications("all", page);
 
+    // Clear previous errors after the API request succeeds
+    setError("");
+
+    setApplications(response.results.map(mapVendorApplication));
+    setTotalCount(response.count);
+    setNextPage(response.next);
+    setPreviousPage(response.previous);
+  } catch (err) {
+    setError(
+      err instanceof ApiError
+        ? err.message
+        : "Unable to load vendor applications. Please try again.",
+    );
+    setApplications([]);
+  } finally {
+    setLoading(false);
+  }
+}, [page]);
+
+  useEffect(() => {
+  let cancelled = false;
+
+  const fetchApplications = async () => {
+    try {
       const response = await adminApi.getVendorApplications("all", page);
 
+      if (cancelled) return;
+
+      setError("");
       setApplications(response.results.map(mapVendorApplication));
       setTotalCount(response.count);
       setNextPage(response.next);
       setPreviousPage(response.previous);
     } catch (err) {
+      if (cancelled) return;
+
       setError(
         err instanceof ApiError
           ? err.message
@@ -139,13 +168,18 @@ export function VendorApplicationsPage() {
       );
       setApplications([]);
     } finally {
-      setLoading(false);
+      if (!cancelled) {
+        setLoading(false);
+      }
     }
-  }, [page]);
+  };
 
-  useEffect(() => {
-    void loadApplications();
-  }, [loadApplications]);
+  void fetchApplications();
+
+  return () => {
+    cancelled = true;
+  };
+}, [page]);
 
   const filteredApplications = useMemo(() => {
     const search = searchTerm.toLowerCase().trim();
