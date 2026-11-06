@@ -1,9 +1,11 @@
+
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   adminApi,
   type VendorApplicationApi,
   type VendorApiStatus,
   type VendorDecision,
+  type VendorDocument,
 } from "../services/adminApi";
 import { ApiError } from "../services/api";
 import {
@@ -20,6 +22,7 @@ import {
   Mail,
   AlertTriangle,
   RotateCcw,
+  LoaderCircle,
 } from "lucide-react";
 import "./VendorApplicationsPage.css";
 
@@ -30,7 +33,7 @@ type VendorStatus =
   | "Suspended"
   | "Rejected"
   | "Draft";
-  
+
 type VendorApplication = {
   id: string;
   businessName: string;
@@ -39,7 +42,7 @@ type VendorApplication = {
   phone: string;
   address: string;
   categories: string[];
-  documents: string[];
+  documents: VendorDocument[];
   images: Array<{ id: string | number; image?: string; alt_text?: string }>;
   submittedDate: string;
   status: VendorStatus;
@@ -71,16 +74,17 @@ function mapVendorApplication(
     id: application.id,
     businessName: application.name,
     ownerName: application.vendor_username || "Owner not provided",
-    email: application.email || application.vendor_email || "Email not provided",
+    email:
+      application.email || application.vendor_email || "Email not provided",
     phone: application.contact || "Phone not provided",
-    address: [application.address, application.city_district]
-      .filter(Boolean)
-      .join(", ") || "Address not provided",
+    address:
+      [application.address, application.city_district]
+        .filter(Boolean)
+        .join(", ") || "Address not provided",
     categories: (application.categories ?? []).map(
-  (item) => item.name || "Unnamed category",
-),
-    // The current business API does not provide a document list.
-    documents: [],
+      (item) => item.name || "Unnamed category",
+    ),
+    documents: application.documents ?? [],
     images: application.images ?? [],
     submittedDate: application.created_at
       ? new Date(application.created_at).toLocaleDateString()
@@ -101,12 +105,10 @@ const statusOptions: Array<"All" | VendorStatus> = [
   "Draft",
 ];
 
-
 export function VendorApplicationsPage() {
   const [applications, setApplications] = useState<VendorApplication[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] =
-    useState<"All" | VendorStatus>("All");
+  const [statusFilter, setStatusFilter] = useState<"All" | VendorStatus>("All");
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [reviewMessage, setReviewMessage] = useState("");
@@ -120,17 +122,45 @@ export function VendorApplicationsPage() {
   const [previousPage, setPreviousPage] = useState<string | null>(null);
 
   const loadApplications = useCallback(async () => {
-    setLoading(true);
+  try {
+    const response = await adminApi.getVendorApplications("all", page);
+
+    // Clear previous errors after the API request succeeds
     setError("");
 
+    setApplications(response.results.map(mapVendorApplication));
+    setTotalCount(response.count);
+    setNextPage(response.next);
+    setPreviousPage(response.previous);
+  } catch (err) {
+    setError(
+      err instanceof ApiError
+        ? err.message
+        : "Unable to load vendor applications. Please try again.",
+    );
+    setApplications([]);
+  } finally {
+    setLoading(false);
+  }
+}, [page]);
+
+  useEffect(() => {
+  let cancelled = false;
+
+  const fetchApplications = async () => {
     try {
       const response = await adminApi.getVendorApplications("all", page);
 
+      if (cancelled) return;
+
+      setError("");
       setApplications(response.results.map(mapVendorApplication));
       setTotalCount(response.count);
       setNextPage(response.next);
       setPreviousPage(response.previous);
     } catch (err) {
+      if (cancelled) return;
+
       setError(
         err instanceof ApiError
           ? err.message
@@ -138,13 +168,18 @@ export function VendorApplicationsPage() {
       );
       setApplications([]);
     } finally {
-      setLoading(false);
+      if (!cancelled) {
+        setLoading(false);
+      }
     }
-  }, [page]);
+  };
 
-  useEffect(() => {
-    void loadApplications();
-  }, [loadApplications]);
+  void fetchApplications();
+
+  return () => {
+    cancelled = true;
+  };
+}, [page]);
 
   const filteredApplications = useMemo(() => {
     const search = searchTerm.toLowerCase().trim();
@@ -155,35 +190,24 @@ export function VendorApplicationsPage() {
         application.ownerName.toLowerCase().includes(search) ||
         application.email.toLowerCase().includes(search) ||
         application.categories.some((category) =>
-          category.toLowerCase().includes(search)
+          category.toLowerCase().includes(search),
         );
 
       const matchesStatus =
-        statusFilter === "All" ||
-        application.status === statusFilter;
+        statusFilter === "All" || application.status === statusFilter;
 
       return matchesSearch && matchesStatus;
     });
   }, [applications, searchTerm, statusFilter]);
 
   const selectedApplication =
-    applications.find((application) => application.id === selectedId) ??
-    null;
+    applications.find((application) => application.id === selectedId) ?? null;
 
   const counts = {
     total: totalCount,
-    pending: applications.filter(
-      (item) => item.status === "Pending"
-    ).length,
-    approved: applications.filter(
-      (item) => item.status === "Approved"
-    ).length,
-    changesRequested: applications.filter(
-      (item) => item.status === "Changes Requested"
-    ).length,
-    suspended: applications.filter(
-      (item) => item.status === "Suspended"
-    ).length,
+    pending: applications.filter((item) => item.status === "Pending").length,
+    approved: applications.filter((item) => item.status === "Approved").length,
+    suspended: applications.filter((item) => item.status === "Suspended").length,
   };
 
   function openReview(application: VendorApplication) {
@@ -193,11 +217,13 @@ export function VendorApplicationsPage() {
   }
 
   function closeReview() {
+    if (submittingDecision) return;
+
     setSelectedId(null);
     setReviewMessage("");
     setFeedback("");
   }
-   
+
   async function submitDecision(
     action: VendorDecision,
     successStatus: VendorStatus,
@@ -221,6 +247,7 @@ export function VendorApplicationsPage() {
       const confirmed = window.confirm(
         `Are you sure you want to suspend ${selectedApplication.businessName}?`,
       );
+
       if (!confirmed) return;
     }
 
@@ -237,8 +264,12 @@ export function VendorApplicationsPage() {
       setFeedback(
         `${selectedApplication.businessName} was successfully updated to "${successStatus}".`,
       );
+
       setSelectedId(null);
       setReviewMessage("");
+
+      setLoading(true);
+      setError("");
 
       await loadApplications();
     } catch (err) {
@@ -253,19 +284,11 @@ export function VendorApplicationsPage() {
   }
 
   function requestChanges() {
-    void submitDecision(
-      "request_changes",
-      "Changes Requested",
-      reviewMessage,
-    );
+    void submitDecision("request_changes", "Changes Requested", reviewMessage);
   }
 
   function suspendVendor() {
-    void submitDecision(
-      "suspend",
-      "Suspended",
-      reviewMessage,
-    );
+    void submitDecision("suspend", "Suspended", reviewMessage);
   }
 
   function approveVendor() {
@@ -295,13 +318,11 @@ export function VendorApplicationsPage() {
     <div className="vendor-applications-page">
       <div className="vendor-page-heading">
         <div>
-          <p className="vendor-eyebrow">
-            ADMINISTRATION / VENDOR MANAGEMENT
-          </p>
+          <p className="vendor-eyebrow">ADMINISTRATION / VENDOR MANAGEMENT</p>
           <h1>Vendor Applications</h1>
           <p className="vendor-page-description">
-            Review vendor applications, verify documents, and manage
-            vendor approval status.
+            Review vendor applications, verify documents, and manage vendor
+            approval status.
           </p>
         </div>
 
@@ -310,28 +331,29 @@ export function VendorApplicationsPage() {
         </div>
       </div>
 
-            {loading && (
+      {loading && (
         <div className="vendor-feedback" role="status">
           Loading vendor applications...
         </div>
       )}
 
       {!loading && error && (
-        <div
-          className="vendor-feedback vendor-feedback-error"
-          role="alert"
-        >
+        <div className="vendor-feedback vendor-feedback-error" role="alert">
           <span>{error}</span>
           <button
             type="button"
-            onClick={() => void loadApplications()}
+            onClick={() => {
+              setLoading(true);
+              setError("");
+              void loadApplications();
+            }}
           >
             Try again
           </button>
         </div>
       )}
 
-      {feedback && (
+      {feedback && !selectedApplication && (
         <div className="vendor-feedback" role="status">
           <CheckCircle size={18} />
           <span>{feedback}</span>
@@ -391,9 +413,7 @@ export function VendorApplicationsPage() {
         <div className="vendor-list-heading">
           <div>
             <h2>Vendor Management Queue</h2>
-            <p>
-              Review applications and manage vendor accounts.
-            </p>
+            <p>Review applications and manage vendor accounts.</p>
           </div>
 
           <span className="vendor-result-count">
@@ -409,9 +429,7 @@ export function VendorApplicationsPage() {
               type="search"
               placeholder="Search business, owner, email or category..."
               value={searchTerm}
-              onChange={(event) =>
-                setSearchTerm(event.target.value)
-              }
+              onChange={(event) => setSearchTerm(event.target.value)}
               aria-label="Search vendor applications"
             />
           </div>
@@ -420,9 +438,7 @@ export function VendorApplicationsPage() {
             className="vendor-status-filter"
             value={statusFilter}
             onChange={(event) =>
-              setStatusFilter(
-                event.target.value as "All" | VendorStatus
-              )
+              setStatusFilter(event.target.value as "All" | VendorStatus)
             }
             aria-label="Filter by vendor status"
           >
@@ -456,9 +472,7 @@ export function VendorApplicationsPage() {
                         <Building2 size={20} />
                       </div>
                       <div>
-                        <strong>
-                          {application.businessName}
-                        </strong>
+                        <strong>{application.businessName}</strong>
                         <span>{application.email}</span>
                       </div>
                     </div>
@@ -469,10 +483,7 @@ export function VendorApplicationsPage() {
                   <td>
                     <div className="vendor-category-list">
                       {application.categories.map((category) => (
-                        <span
-                          className="vendor-category-tag"
-                          key={category}
-                        >
+                        <span className="vendor-category-tag" key={category}>
                           {category}
                         </span>
                       ))}
@@ -484,7 +495,7 @@ export function VendorApplicationsPage() {
                   <td>
                     <span
                       className={`vendor-status-badge ${getStatusClass(
-                        application.status
+                        application.status,
                       )}`}
                     >
                       {application.status}
@@ -516,11 +527,15 @@ export function VendorApplicationsPage() {
         </div>
       </section>
 
-            <div className="vendor-pagination">
+      <div className="vendor-pagination">
         <button
           type="button"
           disabled={!previousPage || loading}
-          onClick={() => setPage((currentPage) => currentPage - 1)}
+          onClick={() => {
+            setLoading(true);
+            setError("");
+            setPage((currentPage) => currentPage - 1);
+          }}
         >
           Previous
         </button>
@@ -530,7 +545,11 @@ export function VendorApplicationsPage() {
         <button
           type="button"
           disabled={!nextPage || loading}
-          onClick={() => setPage((currentPage) => currentPage + 1)}
+          onClick={() => {
+            setLoading(true);
+            setError("");
+            setPage((currentPage) => currentPage + 1);
+          }}
         >
           Next
         </button>
@@ -553,18 +572,15 @@ export function VendorApplicationsPage() {
           >
             <div className="vendor-review-header">
               <div>
-                <p className="vendor-eyebrow">
-                  VENDOR APPLICATION
-                </p>
-                <h2 id="vendor-review-title">
-                  Review Vendor
-                </h2>
+                <p className="vendor-eyebrow">VENDOR APPLICATION</p>
+                <h2 id="vendor-review-title">Review Vendor</h2>
               </div>
 
               <button
                 type="button"
                 className="vendor-close-button"
                 onClick={closeReview}
+                disabled={submittingDecision}
                 aria-label="Close vendor review"
               >
                 ×
@@ -579,13 +595,24 @@ export function VendorApplicationsPage() {
                 <h3>{selectedApplication.businessName}</h3>
                 <span
                   className={`vendor-status-badge ${getStatusClass(
-                    selectedApplication.status
+                    selectedApplication.status,
                   )}`}
                 >
                   {selectedApplication.status}
                 </span>
               </div>
             </div>
+
+            {selectedApplication.status === "Draft" && (
+              <div className="vendor-feedback" role="status">
+                <Clock size={18} />
+                <span>
+                  This application has not yet been submitted by the vendor.
+                  Review actions will become available once the vendor submits
+                  the required documents.
+                </span>
+              </div>
+            )}
 
             <div className="vendor-detail-section">
               <h3>Business and Owner Details</h3>
@@ -594,9 +621,7 @@ export function VendorApplicationsPage() {
                 <Building2 size={17} />
                 <div>
                   <span>Owner</span>
-                  <strong>
-                    {selectedApplication.ownerName}
-                  </strong>
+                  <strong>{selectedApplication.ownerName}</strong>
                 </div>
               </div>
 
@@ -628,9 +653,7 @@ export function VendorApplicationsPage() {
                 <Clock size={17} />
                 <div>
                   <span>Date Submitted</span>
-                  <strong>
-                    {selectedApplication.submittedDate}
-                  </strong>
+                  <strong>{selectedApplication.submittedDate}</strong>
                 </div>
               </div>
             </div>
@@ -638,15 +661,14 @@ export function VendorApplicationsPage() {
             <div className="vendor-detail-section">
               <h3>Requested Categories</h3>
               <div className="vendor-category-list">
-                {selectedApplication.categories.map(
-                  (category) => (
-                    <span
-                      className="vendor-category-tag"
-                      key={category}
-                    >
+                {selectedApplication.categories.length > 0 ? (
+                  selectedApplication.categories.map((category) => (
+                    <span className="vendor-category-tag" key={category}>
                       {category}
                     </span>
-                  )
+                  ))
+                ) : (
+                  <p>No categories requested.</p>
                 )}
               </div>
             </div>
@@ -655,23 +677,37 @@ export function VendorApplicationsPage() {
               <h3>Submitted Documents</h3>
 
               <div className="vendor-documents-list">
-                {selectedApplication.documents.map(
-                  (document) => (
+                {selectedApplication.documents.length > 0 ? (
+                  selectedApplication.documents.map((document) => (
                     <div
                       className="vendor-document-item"
-                      key={document}
+                      key={document.document_id}
                     >
                       <FileText size={19} />
-                      <span>{document}</span>
+
+                      <div className="vendor-document-info">
+                        <strong>
+                          {document.document_type.replace(/_/g, " ")}
+                        </strong>
+
+                        <span>
+                          Status: {document.review_status.replace(/_/g, " ")}
+                        </span>
+
+                        <span>Version: {document.version}</span>
+
+                        {document.correction_reason && (
+                          <span>
+                            Correction note: {document.correction_reason}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                  )
+                  ))
+                ) : (
+                  <p>No documents have been submitted for this application.</p>
                 )}
               </div>
-
-              <p className="vendor-document-note">
-                These are sample document names. Document viewing
-                and verification must be connected to the backend.
-              </p>
             </div>
 
             {selectedApplication.reviewMessage && (
@@ -681,31 +717,40 @@ export function VendorApplicationsPage() {
               </div>
             )}
 
-            <div className="vendor-detail-section">
-              <label
-                className="vendor-review-label"
-                htmlFor="vendor-review-message"
-              >
-                Review Notes
-              </label>
+            {selectedApplication.status !== "Draft" &&
+              selectedApplication.status !== "Rejected" && (
+                <div className="vendor-detail-section">
+                  <label
+                    className="vendor-review-label"
+                    htmlFor="vendor-review-message"
+                  >
+                    Review Notes
+                  </label>
 
-              <textarea
-                id="vendor-review-message"
-                value={reviewMessage}
-                onChange={(event) =>
-                  setReviewMessage(event.target.value)
-                }
-                placeholder="Explain any missing documents or required changes..."
-                rows={3}
-              />
+                  <textarea
+                    id="vendor-review-message"
+                    value={reviewMessage}
+                    onChange={(event) => setReviewMessage(event.target.value)}
+                    placeholder="Explain any missing documents or required changes..."
+                    rows={3}
+                    disabled={submittingDecision}
+                  />
 
-              <p className="vendor-review-help">
-                Required when requesting changes. You may also add
-                a note before suspending a vendor.
-              </p>
-            </div>
+                  <p className="vendor-review-help">
+                    Required when requesting changes. You may also add a note
+                    before suspending a vendor.
+                  </p>
+                </div>
+              )}
 
-                  <div className="vendor-review-actions">
+            {submittingDecision && (
+              <div className="vendor-feedback" role="status">
+                <LoaderCircle size={18} />
+                <span>Processing decision. Please wait...</span>
+              </div>
+            )}
+
+            <div className="vendor-review-actions">
               {selectedApplication.status === "Pending" && (
                 <>
                   <button
@@ -765,7 +810,28 @@ export function VendorApplicationsPage() {
                   Re-approve
                 </button>
               )}
-                       </div>
+
+              {selectedApplication.status === "Changes Requested" && (
+                <p className="vendor-review-help">
+                  Waiting for the vendor to make the requested changes and
+                  resubmit the application.
+                </p>
+              )}
+
+              {selectedApplication.status === "Rejected" && (
+                <p className="vendor-review-help">
+                  This application has been rejected. No further review actions
+                  are currently available.
+                </p>
+              )}
+            </div>
+
+            {feedback && (
+              <div className="vendor-feedback vendor-feedback-error" role="alert">
+                <AlertTriangle size={18} />
+                <span>{feedback}</span>
+              </div>
+            )}
           </section>
         </div>
       )}

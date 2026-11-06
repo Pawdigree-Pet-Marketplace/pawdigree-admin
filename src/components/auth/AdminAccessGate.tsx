@@ -7,17 +7,28 @@ const signedOutRole = "SIGNED_OUT";
 type AuthState = "admin" | "denied" | "signed-out";
 
 function readAuthState(): AuthState {
+  const allowedRoles = ["ADMIN", "SYSTEM_ADMIN"];
+
   const activeRole = localStorage.getItem(activeRoleKey);
   const role = activeRole ?? localStorage.getItem("role");
+
   const token =
     localStorage.getItem("token") ??
     localStorage.getItem("access") ??
     localStorage.getItem("accessToken");
 
   if (activeRole === signedOutRole) return "signed-out";
-  if (role && role !== "ADMIN") return "denied";
+
+  if (role && !allowedRoles.includes(role.toUpperCase())) {
+    return "denied";
+  }
+
   if (!token || !role) return "signed-out";
-  return activeRole === null || activeRole === "ADMIN" ? "admin" : "denied";
+
+  return activeRole === null ||
+    allowedRoles.includes(activeRole.toUpperCase())
+    ? "admin"
+    : "denied";
 }
 
 export default function AdminAccessGate({ children }: { children: ReactNode }) {

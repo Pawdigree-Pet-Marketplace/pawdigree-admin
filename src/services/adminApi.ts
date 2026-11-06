@@ -18,6 +18,17 @@ export interface VendorCategory extends ApiRecord {
   can_sell: boolean;
 }
 
+export interface VendorDocument extends ApiRecord {
+  document_id: string;
+  document_type: string;
+  review_status: string;
+  correction_reason?: string | null;
+  version: number;
+  reviewed_at?: string | null;
+  created_at: string;
+  download_url: string;
+}
+
 export interface VendorApplicationApi extends ApiRecord {
   id: string;
   vendor_email?: string;
@@ -29,6 +40,7 @@ export interface VendorApplicationApi extends ApiRecord {
   address?: string | null;
   city_district?: string | null;
   categories?: VendorCategory[];
+  documents?: VendorDocument[];
   verification_status: VendorApiStatus;
   decision_reason?: string | null;
   vendor_response?: string | null;
