@@ -1,9 +1,11 @@
+
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   adminApi,
   type VendorApplicationApi,
   type VendorApiStatus,
   type VendorDecision,
+  type VendorDocument,
 } from "../services/adminApi";
 import { ApiError } from "../services/api";
 import {
@@ -20,6 +22,7 @@ import {
   Mail,
   AlertTriangle,
   RotateCcw,
+  LoaderCircle,
 } from "lucide-react";
 import "./VendorApplicationsPage.css";
 
@@ -39,7 +42,7 @@ type VendorApplication = {
   phone: string;
   address: string;
   categories: string[];
-  documents: string[];
+  documents: VendorDocument[];
   images: Array<{ id: string | number; image?: string; alt_text?: string }>;
   submittedDate: string;
   status: VendorStatus;
@@ -81,8 +84,7 @@ function mapVendorApplication(
     categories: (application.categories ?? []).map(
       (item) => item.name || "Unnamed category",
     ),
-    // The current business API does not provide a document list.
-    documents: [],
+    documents: application.documents ?? [],
     images: application.images ?? [],
     submittedDate: application.created_at
       ? new Date(application.created_at).toLocaleDateString()
@@ -120,14 +122,45 @@ export function VendorApplicationsPage() {
   const [previousPage, setPreviousPage] = useState<string | null>(null);
 
   const loadApplications = useCallback(async () => {
+  try {
+    const response = await adminApi.getVendorApplications("all", page);
+
+    // Clear previous errors after the API request succeeds
+    setError("");
+
+    setApplications(response.results.map(mapVendorApplication));
+    setTotalCount(response.count);
+    setNextPage(response.next);
+    setPreviousPage(response.previous);
+  } catch (err) {
+    setError(
+      err instanceof ApiError
+        ? err.message
+        : "Unable to load vendor applications. Please try again.",
+    );
+    setApplications([]);
+  } finally {
+    setLoading(false);
+  }
+}, [page]);
+
+  useEffect(() => {
+  let cancelled = false;
+
+  const fetchApplications = async () => {
     try {
       const response = await adminApi.getVendorApplications("all", page);
 
+      if (cancelled) return;
+
+      setError("");
       setApplications(response.results.map(mapVendorApplication));
       setTotalCount(response.count);
       setNextPage(response.next);
       setPreviousPage(response.previous);
     } catch (err) {
+      if (cancelled) return;
+
       setError(
         err instanceof ApiError
           ? err.message
@@ -135,45 +168,18 @@ export function VendorApplicationsPage() {
       );
       setApplications([]);
     } finally {
-      setLoading(false);
+      if (!cancelled) {
+        setLoading(false);
+      }
     }
-  }, [page]);
+  };
 
-  useEffect(() => {
-    let isActive = true;
+  void fetchApplications();
 
-    adminApi
-      .getVendorApplications("all", page)
-      .then((response) => {
-        if (!isActive) return;
-
-        setApplications(response.results.map(mapVendorApplication));
-        setTotalCount(response.count);
-        setNextPage(response.next);
-        setPreviousPage(response.previous);
-        setError("");
-      })
-      .catch((err) => {
-        if (!isActive) return;
-
-        setError(
-          err instanceof ApiError
-            ? err.message
-            : "Unable to load vendor applications. Please try again.",
-        );
-
-        setApplications([]);
-      })
-      .finally(() => {
-        if (isActive) {
-          setLoading(false);
-        }
-      });
-
-    return () => {
-      isActive = false;
-    };
-  }, [page]);
+  return () => {
+    cancelled = true;
+  };
+}, [page]);
 
   const filteredApplications = useMemo(() => {
     const search = searchTerm.toLowerCase().trim();
@@ -201,11 +207,7 @@ export function VendorApplicationsPage() {
     total: totalCount,
     pending: applications.filter((item) => item.status === "Pending").length,
     approved: applications.filter((item) => item.status === "Approved").length,
-    changesRequested: applications.filter(
-      (item) => item.status === "Changes Requested",
-    ).length,
-    suspended: applications.filter((item) => item.status === "Suspended")
-      .length,
+    suspended: applications.filter((item) => item.status === "Suspended").length,
   };
 
   function openReview(application: VendorApplication) {
@@ -215,6 +217,8 @@ export function VendorApplicationsPage() {
   }
 
   function closeReview() {
+    if (submittingDecision) return;
+
     setSelectedId(null);
     setReviewMessage("");
     setFeedback("");
@@ -243,6 +247,7 @@ export function VendorApplicationsPage() {
       const confirmed = window.confirm(
         `Are you sure you want to suspend ${selectedApplication.businessName}?`,
       );
+
       if (!confirmed) return;
     }
 
@@ -259,11 +264,13 @@ export function VendorApplicationsPage() {
       setFeedback(
         `${selectedApplication.businessName} was successfully updated to "${successStatus}".`,
       );
+
       setSelectedId(null);
       setReviewMessage("");
 
       setLoading(true);
       setError("");
+
       await loadApplications();
     } catch (err) {
       setFeedback(
@@ -346,7 +353,7 @@ export function VendorApplicationsPage() {
         </div>
       )}
 
-      {feedback && (
+      {feedback && !selectedApplication && (
         <div className="vendor-feedback" role="status">
           <CheckCircle size={18} />
           <span>{feedback}</span>
@@ -573,6 +580,7 @@ export function VendorApplicationsPage() {
                 type="button"
                 className="vendor-close-button"
                 onClick={closeReview}
+                disabled={submittingDecision}
                 aria-label="Close vendor review"
               >
                 ×
@@ -594,6 +602,17 @@ export function VendorApplicationsPage() {
                 </span>
               </div>
             </div>
+
+            {selectedApplication.status === "Draft" && (
+              <div className="vendor-feedback" role="status">
+                <Clock size={18} />
+                <span>
+                  This application has not yet been submitted by the vendor.
+                  Review actions will become available once the vendor submits
+                  the required documents.
+                </span>
+              </div>
+            )}
 
             <div className="vendor-detail-section">
               <h3>Business and Owner Details</h3>
@@ -642,11 +661,15 @@ export function VendorApplicationsPage() {
             <div className="vendor-detail-section">
               <h3>Requested Categories</h3>
               <div className="vendor-category-list">
-                {selectedApplication.categories.map((category) => (
-                  <span className="vendor-category-tag" key={category}>
-                    {category}
-                  </span>
-                ))}
+                {selectedApplication.categories.length > 0 ? (
+                  selectedApplication.categories.map((category) => (
+                    <span className="vendor-category-tag" key={category}>
+                      {category}
+                    </span>
+                  ))
+                ) : (
+                  <p>No categories requested.</p>
+                )}
               </div>
             </div>
 
@@ -654,18 +677,37 @@ export function VendorApplicationsPage() {
               <h3>Submitted Documents</h3>
 
               <div className="vendor-documents-list">
-                {selectedApplication.documents.map((document) => (
-                  <div className="vendor-document-item" key={document}>
-                    <FileText size={19} />
-                    <span>{document}</span>
-                  </div>
-                ))}
-              </div>
+                {selectedApplication.documents.length > 0 ? (
+                  selectedApplication.documents.map((document) => (
+                    <div
+                      className="vendor-document-item"
+                      key={document.document_id}
+                    >
+                      <FileText size={19} />
 
-              <p className="vendor-document-note">
-                These are sample document names. Document viewing and
-                verification must be connected to the backend.
-              </p>
+                      <div className="vendor-document-info">
+                        <strong>
+                          {document.document_type.replace(/_/g, " ")}
+                        </strong>
+
+                        <span>
+                          Status: {document.review_status.replace(/_/g, " ")}
+                        </span>
+
+                        <span>Version: {document.version}</span>
+
+                        {document.correction_reason && (
+                          <span>
+                            Correction note: {document.correction_reason}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p>No documents have been submitted for this application.</p>
+                )}
+              </div>
             </div>
 
             {selectedApplication.reviewMessage && (
@@ -675,27 +717,38 @@ export function VendorApplicationsPage() {
               </div>
             )}
 
-            <div className="vendor-detail-section">
-              <label
-                className="vendor-review-label"
-                htmlFor="vendor-review-message"
-              >
-                Review Notes
-              </label>
+            {selectedApplication.status !== "Draft" &&
+              selectedApplication.status !== "Rejected" && (
+                <div className="vendor-detail-section">
+                  <label
+                    className="vendor-review-label"
+                    htmlFor="vendor-review-message"
+                  >
+                    Review Notes
+                  </label>
 
-              <textarea
-                id="vendor-review-message"
-                value={reviewMessage}
-                onChange={(event) => setReviewMessage(event.target.value)}
-                placeholder="Explain any missing documents or required changes..."
-                rows={3}
-              />
+                  <textarea
+                    id="vendor-review-message"
+                    value={reviewMessage}
+                    onChange={(event) => setReviewMessage(event.target.value)}
+                    placeholder="Explain any missing documents or required changes..."
+                    rows={3}
+                    disabled={submittingDecision}
+                  />
 
-              <p className="vendor-review-help">
-                Required when requesting changes. You may also add a note before
-                suspending a vendor.
-              </p>
-            </div>
+                  <p className="vendor-review-help">
+                    Required when requesting changes. You may also add a note
+                    before suspending a vendor.
+                  </p>
+                </div>
+              )}
+
+            {submittingDecision && (
+              <div className="vendor-feedback" role="status">
+                <LoaderCircle size={18} />
+                <span>Processing decision. Please wait...</span>
+              </div>
+            )}
 
             <div className="vendor-review-actions">
               {selectedApplication.status === "Pending" && (
@@ -757,7 +810,28 @@ export function VendorApplicationsPage() {
                   Re-approve
                 </button>
               )}
+
+              {selectedApplication.status === "Changes Requested" && (
+                <p className="vendor-review-help">
+                  Waiting for the vendor to make the requested changes and
+                  resubmit the application.
+                </p>
+              )}
+
+              {selectedApplication.status === "Rejected" && (
+                <p className="vendor-review-help">
+                  This application has been rejected. No further review actions
+                  are currently available.
+                </p>
+              )}
             </div>
+
+            {feedback && (
+              <div className="vendor-feedback vendor-feedback-error" role="alert">
+                <AlertTriangle size={18} />
+                <span>{feedback}</span>
+              </div>
+            )}
           </section>
         </div>
       )}
