@@ -16,10 +16,17 @@ function AdminLoginPage() {
 
     try {
       const tokens = await adminLogin(email, password);
-
+      
       // Save tokens for authenticated API requests.
-      localStorage.setItem("access", tokens.access);
-      localStorage.setItem("refresh", tokens.refresh);
+       localStorage.setItem("access", tokens.access);
+       localStorage.setItem("refresh", tokens.refresh);
+
+      // Save the administrator's role.
+       localStorage.setItem("role", tokens.role);
+       localStorage.setItem("pawdigree_active_role", tokens.role);
+
+      // Clear any previous signed-out state.
+       localStorage.removeItem("token");
 
       // Open the admin dashboard after successful authentication.
       navigate("/admin/dashboard", { replace: true });
