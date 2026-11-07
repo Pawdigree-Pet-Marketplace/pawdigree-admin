@@ -34,21 +34,31 @@ type VendorStatus =
   | "Rejected"
   | "Draft";
 
+type BusinessType =
+  | "Product Seller"
+  | "Service Provider"
+  | "Pet Sale / Adoption";
+
 type VendorApplication = {
   id: string;
   businessName: string;
+  businessTypes: string[];
   ownerName: string;
   email: string;
   phone: string;
   address: string;
-  categories: string[];
   documents: VendorDocument[];
-  images: Array<{ id: string | number; image?: string; alt_text?: string }>;
+  images: Array<{
+    id: string | number;
+    image?: string;
+    alt_text?: string;
+  }>;
   submittedDate: string;
   status: VendorStatus;
   reviewMessage: string;
 };
 
+// Convert API status values into readable labels.
 function mapApiStatus(status: VendorApiStatus): VendorStatus {
   switch (status) {
     case "changes_requested":
@@ -67,12 +77,89 @@ function mapApiStatus(status: VendorApiStatus): VendorStatus {
   }
 }
 
+// Convert API business type values into readable labels.
+function formatBusinessType(value: unknown): string {
+  if (typeof value !== "string") return "";
+
+  const normalized = value.toLowerCase().trim();
+
+  const knownTypes: Record<string, BusinessType> = {
+    product_seller: "Product Seller",
+    "product seller": "Product Seller",
+    service_provider: "Service Provider",
+    "service provider": "Service Provider",
+    pet_sale_adoption: "Pet Sale / Adoption",
+    pet_sale_and_adoption: "Pet Sale / Adoption",
+    pet_sales_and_adoption: "Pet Sale / Adoption",
+    "pet sale / adoption": "Pet Sale / Adoption",
+    "pet sale and adoption": "Pet Sale / Adoption",
+    pet_sale: "Pet Sale / Adoption",
+    adoption: "Pet Sale / Adoption",
+  };
+
+  if (knownTypes[normalized]) {
+    return knownTypes[normalized];
+  }
+
+  // Preserve an unfamiliar API value instead of hiding it.
+  return value
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (character) => character.toUpperCase());
+}
+
+// Support multiple business types and the previous single-type API field.
+function getBusinessTypes(application: VendorApplicationApi): string[] {
+  const extendedApplication = application as VendorApplicationApi & {
+    business_types?: unknown;
+    business_type?: unknown;
+  };
+
+  const apiTypes =
+    extendedApplication.business_types ??
+    extendedApplication.business_type;
+
+  if (Array.isArray(apiTypes)) {
+    return [
+      ...new Set(
+        apiTypes
+          .map((item) => {
+            if (typeof item === "string") {
+              return formatBusinessType(item);
+            }
+
+            if (item && typeof item === "object") {
+              const typeObject = item as {
+                value?: unknown;
+                name?: unknown;
+                business_type?: unknown;
+              };
+
+              return formatBusinessType(
+                typeObject.value ??
+                  typeObject.name ??
+                  typeObject.business_type,
+              );
+            }
+
+            return "";
+          })
+          .filter(Boolean),
+      ),
+    ];
+  }
+
+  const singleType = formatBusinessType(apiTypes);
+
+  return singleType ? [singleType] : [];
+}
+
 function mapVendorApplication(
   application: VendorApplicationApi,
 ): VendorApplication {
   return {
     id: application.id,
     businessName: application.name,
+    businessTypes: getBusinessTypes(application),
     ownerName: application.vendor_username || "Owner not provided",
     email:
       application.email || application.vendor_email || "Email not provided",
@@ -81,9 +168,6 @@ function mapVendorApplication(
       [application.address, application.city_district]
         .filter(Boolean)
         .join(", ") || "Address not provided",
-    categories: (application.categories ?? []).map(
-      (item) => item.name || "Unnamed category",
-    ),
     documents: application.documents ?? [],
     images: application.images ?? [],
     submittedDate: application.created_at
@@ -102,7 +186,6 @@ const statusOptions: Array<"All" | VendorStatus> = [
   "Changes Requested",
   "Suspended",
   "Rejected",
-  "Draft",
 ];
 
 export function VendorApplicationsPage() {
@@ -121,77 +204,65 @@ export function VendorApplicationsPage() {
   const [nextPage, setNextPage] = useState<string | null>(null);
   const [previousPage, setPreviousPage] = useState<string | null>(null);
 
+    // Fetch vendor applications in one place.
   const loadApplications = useCallback(async () => {
-  try {
-    const response = await adminApi.getVendorApplications("all", page);
-
-    // Clear previous errors after the API request succeeds
-    setError("");
-
-    setApplications(response.results.map(mapVendorApplication));
-    setTotalCount(response.count);
-    setNextPage(response.next);
-    setPreviousPage(response.previous);
-  } catch (err) {
-    setError(
-      err instanceof ApiError
-        ? err.message
-        : "Unable to load vendor applications. Please try again.",
-    );
-    setApplications([]);
-  } finally {
-    setLoading(false);
-  }
-}, [page]);
-
-  useEffect(() => {
-  let cancelled = false;
-
-  const fetchApplications = async () => {
     try {
       const response = await adminApi.getVendorApplications("all", page);
 
-      if (cancelled) return;
+      // Draft applications are not ready for the admin review queue.
+      const submittedApplications = response.results.filter(
+        (application) => application.verification_status !== "draft",
+      );
 
-      setError("");
-      setApplications(response.results.map(mapVendorApplication));
+      setApplications(submittedApplications.map(mapVendorApplication));
       setTotalCount(response.count);
       setNextPage(response.next);
       setPreviousPage(response.previous);
+      setError("");
     } catch (err) {
-      if (cancelled) return;
-
       setError(
         err instanceof ApiError
           ? err.message
           : "Unable to load vendor applications. Please try again.",
       );
       setApplications([]);
+      setTotalCount(0);
+      setNextPage(null);
+      setPreviousPage(null);
     } finally {
-      if (!cancelled) {
-        setLoading(false);
-      }
+      setLoading(false);
     }
-  };
+  }, [page]);
 
-  void fetchApplications();
+    // Reload when the page changes.
+  useEffect(() => {
+    let cancelled = false;
 
-  return () => {
-    cancelled = true;
-  };
-}, [page]);
+    Promise.resolve().then(() => {
+      if (!cancelled) {
+        void loadApplications();
+      }
+    });
 
+    return () => {
+      cancelled = true;
+    };
+  }, [loadApplications]);
+
+  // Search and status filtering.
   const filteredApplications = useMemo(() => {
     const search = searchTerm.toLowerCase().trim();
 
     return applications.filter((application) => {
+      const searchableBusinessTypes = application.businessTypes
+        .join(" ")
+        .toLowerCase();
+
       const matchesSearch =
         application.businessName.toLowerCase().includes(search) ||
         application.ownerName.toLowerCase().includes(search) ||
         application.email.toLowerCase().includes(search) ||
-        application.categories.some((category) =>
-          category.toLowerCase().includes(search),
-        );
+        searchableBusinessTypes.includes(search);
 
       const matchesStatus =
         statusFilter === "All" || application.status === statusFilter;
@@ -203,12 +274,18 @@ export function VendorApplicationsPage() {
   const selectedApplication =
     applications.find((application) => application.id === selectedId) ?? null;
 
+  // Status counts are based on the currently loaded API page.
   const counts = {
     total: totalCount,
     pending: applications.filter((item) => item.status === "Pending").length,
     approved: applications.filter((item) => item.status === "Approved").length,
     suspended: applications.filter((item) => item.status === "Suspended").length,
   };
+
+  function selectStatusFilter(status: "All" | VendorStatus) {
+    setStatusFilter(status);
+    setSearchTerm("");
+  }
 
   function openReview(application: VendorApplication) {
     setSelectedId(application.id);
@@ -261,15 +338,13 @@ export function VendorApplicationsPage() {
         reason.trim() || undefined,
       );
 
-      setFeedback(
-        `${selectedApplication.businessName} was successfully updated to "${successStatus}".`,
-      );
+      const businessName = selectedApplication.businessName;
 
       setSelectedId(null);
       setReviewMessage("");
-
-      setLoading(true);
-      setError("");
+      setFeedback(
+        `${businessName} was successfully updated to "${successStatus}".`,
+      );
 
       await loadApplications();
     } catch (err) {
@@ -309,6 +384,8 @@ export function VendorApplicationsPage() {
         return "status-changes";
       case "Suspended":
         return "status-suspended";
+      case "Rejected":
+        return "status-rejected";
       default:
         return "";
     }
@@ -318,7 +395,9 @@ export function VendorApplicationsPage() {
     <div className="vendor-applications-page">
       <div className="vendor-page-heading">
         <div>
-          <p className="vendor-eyebrow">ADMINISTRATION / VENDOR MANAGEMENT</p>
+          <p className="vendor-eyebrow">
+            ADMINISTRATION / VENDOR MANAGEMENT
+          </p>
           <h1>Vendor Applications</h1>
           <p className="vendor-page-description">
             Review vendor applications, verify documents, and manage vendor
@@ -342,11 +421,7 @@ export function VendorApplicationsPage() {
           <span>{error}</span>
           <button
             type="button"
-            onClick={() => {
-              setLoading(true);
-              setError("");
-              void loadApplications();
-            }}
+            onClick={() => void loadApplications()}
           >
             Try again
           </button>
@@ -367,8 +442,16 @@ export function VendorApplicationsPage() {
         </div>
       )}
 
+      {/* Clickable vendor statistics cards */}
       <div className="vendor-stats-grid">
-        <div className="vendor-stat-card">
+        <button
+          type="button"
+          className={`vendor-stat-card vendor-stat-card-clickable ${
+            statusFilter === "All" ? "vendor-stat-card-active" : ""
+          }`}
+          aria-pressed={statusFilter === "All"}
+          onClick={() => selectStatusFilter("All")}
+        >
           <div className="vendor-stat-icon">
             <Building2 size={22} />
           </div>
@@ -376,9 +459,16 @@ export function VendorApplicationsPage() {
             <p>Total Vendors</p>
             <h2>{counts.total}</h2>
           </div>
-        </div>
+        </button>
 
-        <div className="vendor-stat-card">
+        <button
+          type="button"
+          className={`vendor-stat-card vendor-stat-card-clickable ${
+            statusFilter === "Pending" ? "vendor-stat-card-active" : ""
+          }`}
+          aria-pressed={statusFilter === "Pending"}
+          onClick={() => selectStatusFilter("Pending")}
+        >
           <div className="vendor-stat-icon pending-icon">
             <Clock size={22} />
           </div>
@@ -386,9 +476,16 @@ export function VendorApplicationsPage() {
             <p>Pending Review</p>
             <h2>{counts.pending}</h2>
           </div>
-        </div>
+        </button>
 
-        <div className="vendor-stat-card">
+        <button
+          type="button"
+          className={`vendor-stat-card vendor-stat-card-clickable ${
+            statusFilter === "Approved" ? "vendor-stat-card-active" : ""
+          }`}
+          aria-pressed={statusFilter === "Approved"}
+          onClick={() => selectStatusFilter("Approved")}
+        >
           <div className="vendor-stat-icon approved-icon">
             <CheckCircle size={22} />
           </div>
@@ -396,9 +493,16 @@ export function VendorApplicationsPage() {
             <p>Approved</p>
             <h2>{counts.approved}</h2>
           </div>
-        </div>
+        </button>
 
-        <div className="vendor-stat-card">
+        <button
+          type="button"
+          className={`vendor-stat-card vendor-stat-card-clickable ${
+            statusFilter === "Suspended" ? "vendor-stat-card-active" : ""
+          }`}
+          aria-pressed={statusFilter === "Suspended"}
+          onClick={() => selectStatusFilter("Suspended")}
+        >
           <div className="vendor-stat-icon suspended-icon">
             <AlertTriangle size={22} />
           </div>
@@ -406,7 +510,7 @@ export function VendorApplicationsPage() {
             <p>Suspended</p>
             <h2>{counts.suspended}</h2>
           </div>
-        </div>
+        </button>
       </div>
 
       <section className="vendor-applications-card">
@@ -427,7 +531,7 @@ export function VendorApplicationsPage() {
             <Search size={19} />
             <input
               type="search"
-              placeholder="Search business, owner, email or category..."
+              placeholder="Search business, owner, email or business type..."
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
               aria-label="Search vendor applications"
@@ -456,7 +560,7 @@ export function VendorApplicationsPage() {
               <tr>
                 <th>Business</th>
                 <th>Owner</th>
-                <th>Categories</th>
+                <th>Business Type</th>
                 <th>Date Submitted</th>
                 <th>Status</th>
                 <th>Review</th>
@@ -482,11 +586,20 @@ export function VendorApplicationsPage() {
 
                   <td>
                     <div className="vendor-category-list">
-                      {application.categories.map((category) => (
-                        <span className="vendor-category-tag" key={category}>
-                          {category}
+                      {application.businessTypes.length > 0 ? (
+                        application.businessTypes.map((businessType) => (
+                          <span
+                            className="vendor-category-tag"
+                            key={businessType}
+                          >
+                            {businessType}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="vendor-category-tag">
+                          Not provided
                         </span>
-                      ))}
+                      )}
                     </div>
                   </td>
 
@@ -518,7 +631,8 @@ export function VendorApplicationsPage() {
               {filteredApplications.length === 0 && (
                 <tr>
                   <td colSpan={6} className="vendor-empty-state">
-                    No vendor applications match your search.
+                    No vendor applications match your search or selected
+                    status.
                   </td>
                 </tr>
               )}
@@ -531,11 +645,7 @@ export function VendorApplicationsPage() {
         <button
           type="button"
           disabled={!previousPage || loading}
-          onClick={() => {
-            setLoading(true);
-            setError("");
-            setPage((currentPage) => currentPage - 1);
-          }}
+          onClick={() => setPage((currentPage) => currentPage - 1)}
         >
           Previous
         </button>
@@ -545,11 +655,7 @@ export function VendorApplicationsPage() {
         <button
           type="button"
           disabled={!nextPage || loading}
-          onClick={() => {
-            setLoading(true);
-            setError("");
-            setPage((currentPage) => currentPage + 1);
-          }}
+          onClick={() => setPage((currentPage) => currentPage + 1)}
         >
           Next
         </button>
@@ -659,16 +765,16 @@ export function VendorApplicationsPage() {
             </div>
 
             <div className="vendor-detail-section">
-              <h3>Requested Categories</h3>
+              <h3>Business Types</h3>
               <div className="vendor-category-list">
-                {selectedApplication.categories.length > 0 ? (
-                  selectedApplication.categories.map((category) => (
-                    <span className="vendor-category-tag" key={category}>
-                      {category}
+                {selectedApplication.businessTypes.length > 0 ? (
+                  selectedApplication.businessTypes.map((businessType) => (
+                    <span className="vendor-category-tag" key={businessType}>
+                      {businessType}
                     </span>
                   ))
                 ) : (
-                  <p>No categories requested.</p>
+                  <span className="vendor-category-tag">Not provided</span>
                 )}
               </div>
             </div>
@@ -827,7 +933,10 @@ export function VendorApplicationsPage() {
             </div>
 
             {feedback && (
-              <div className="vendor-feedback vendor-feedback-error" role="alert">
+              <div
+                className="vendor-feedback vendor-feedback-error"
+                role="alert"
+              >
                 <AlertTriangle size={18} />
                 <span>{feedback}</span>
               </div>
