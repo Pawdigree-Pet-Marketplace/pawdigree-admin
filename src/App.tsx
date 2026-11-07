@@ -12,7 +12,6 @@ import {
 import { AdminSidebar } from "./components/admin/AdminSidebar";
 import { AdminTopbar } from "./components/admin/AdminTopbar";
 import { AdminBottomNav } from "./components/admin/AdminBottomNav";
-
 import { AdminDashboard } from "./pages/AdminDashboard";
 import { VendorApplicationsPage } from "./pages/VendorApplicationsPage";
 import { CategoriesManagement } from "./pages/CategoriesManagement";
@@ -96,7 +95,7 @@ return (
           <Route path="/dashboard" element={<AdminDashboard />} />
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
-
+          <Route path="/admin-form" element={<AdminForm />} />
           <Route path="/admin-form" element={<AdminForm />} />
 
           <Route
