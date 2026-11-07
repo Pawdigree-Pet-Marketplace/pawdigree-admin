@@ -17,8 +17,8 @@ import { AdminDashboard } from "./pages/AdminDashboard";
 import { VendorApplicationsPage } from "./pages/VendorApplicationsPage";
 import { CategoriesManagement } from "./pages/CategoriesManagement";
 import { ListingApprovalQueue } from "./pages/ListingApprovalQueue";
-import AdminForm from "./components/AdminForm";
 
+import AdminForm from "./components/AdminForm";
 import AdminLoginPage from "./pages/auth/AdminLoginPage";
 import AdminAccessGate from "./components/auth/AdminAccessGate";
 
@@ -35,7 +35,7 @@ const PAGE_INFO: Record<string, { title: string; breadcrumb: string }> = {
     title: "Vendor Applications",
     breadcrumb: "Admin / Vendors",
   },
-  "/adminForm": {
+  "/admin-form": {
     title: "Admin Management",
     breadcrumb: "Admin / Management",
   },
@@ -46,22 +46,18 @@ function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Display login without the admin layout.
   if (location.pathname === "/login") {
     return <AdminLoginPage />;
   }
 
-  // Check whether an access token exists.
   const accessToken =
     localStorage.getItem("access") ||
     localStorage.getItem("accessToken");
 
-  // Redirect unauthenticated users to login.
   if (!accessToken) {
     return <Navigate to="/login" replace />;
   }
 
-  // Handle admin logout.
   function handleLogout() {
     localStorage.removeItem("access");
     localStorage.removeItem("refresh");
@@ -101,6 +97,8 @@ return (
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
 
+          <Route path="/admin-form" element={<AdminForm />} />
+
           <Route
             path="/admin/vendors"
             element={<VendorApplicationsPage />}
@@ -115,8 +113,6 @@ return (
             path="/admin/listings/approval"
             element={<ListingApprovalQueue />}
           />
-
-          <Route path="/adminForm" element={<AdminForm />} />
 
           <Route
             path="*"
