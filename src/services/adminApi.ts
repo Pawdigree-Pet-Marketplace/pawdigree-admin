@@ -34,6 +34,7 @@ export interface VendorApplicationApi extends ApiRecord {
   vendor_email?: string;
   vendor_username?: string;
   name: string;
+  business_type?: "product_seller" | "service_provider" | string;
   description?: string | null;
   contact?: string | null;
   email?: string | null;
