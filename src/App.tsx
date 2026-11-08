@@ -2,19 +2,58 @@
 import { useState } from "react";
 import {
   BrowserRouter,
-  Routes,
+  Navigate,
   Route,
+  Routes,
   useLocation,
   useNavigate,
-  Navigate,
 } from "react-router-dom";
 
-import { AdminSidebar } from "./components/admin/AdminSidebar";
-import AdminTopbar from "./components/admin/AdminTopbar";
 import { AdminBottomNav } from "./components/admin/AdminBottomNav";
+import AdminTopbar from "./components/admin/AdminTopbar";
 
 import { AdminDashboard } from "./pages/AdminDashboard";
-import AdminForm from "./components/AdminForm.tsx";
+import AdminForm from "./components/AdminForm";
+import AdminLoginPage from "./pages/auth/AdminLoginPage";
+import VendorApplicationsPage from "./pages/VendorApplicationsPage";
+import { AdminSidebar } from "./components/admin/AdminSidebar";
+import { CategoriesManagement } from "./pages/CategoriesManagement";
+import { ListingApprovalQueue } from "./pages/ListingApprovalQueue";
+const PAGE_INFO: Record<string, { title: string; breadcrumb: string }> = {
+  "/": {
+    title: "Admin Dashboard",
+    breadcrumb: "Admin / Dashboard",
+  },
+  "/dashboard": {
+    title: "Admin Dashboard",
+    breadcrumb: "Admin / Dashboard",
+  },
+  "/admin": {
+    title: "Admin Dashboard",
+    breadcrumb: "Admin / Dashboard",
+  },
+  "/admin/dashboard": {
+    title: "Admin Dashboard",
+    breadcrumb: "Admin / Dashboard",
+  },
+  "/admin-form": {
+    title: "Admin Management",
+    breadcrumb: "Admin / Management",
+  },
+  "/admin/vendors": {
+    title: "Vendor Applications",
+    breadcrumb: "Admin / Vendors",
+  },
+  "/admin/listings/categories": {
+    title: "Categories Management",
+    breadcrumb: "Admin / Listings / Categories",
+  },
+  "/admin/listings/approval": {
+    title: "Listing Approval",
+    breadcrumb: "Admin / Listings / Approval",
+  },
+};
+
 function Layout() {
   const [open, setOpen] = useState(false);
   const location = useLocation();
@@ -37,6 +76,8 @@ function Layout() {
     localStorage.removeItem("refresh");
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
+    localStorage.removeItem("role");
+    localStorage.removeItem("pawdigree_active_role");
 
     navigate("/login", { replace: true });
   }
@@ -69,7 +110,7 @@ function Layout() {
           <Route path="/dashboard" element={<AdminDashboard />} />
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
-          <Route path="/admin-form" element={<AdminForm />} />
+
           <Route path="/admin-form" element={<AdminForm />} />
 
           <Route
@@ -98,6 +139,7 @@ function Layout() {
     </>
   );
 }
+
 function App() {
   return (
     <BrowserRouter>

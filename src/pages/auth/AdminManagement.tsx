@@ -24,6 +24,13 @@ import {
 import "../AdminManagement.css";
 
 export default function AdminManagement() {
+  const role =
+    localStorage.getItem("pawdigree_active_role") ||
+    localStorage.getItem("role") ||
+    "";
+
+  const isSystemAdmin = role.toUpperCase() === "SYSTEM_ADMIN";
+
   const [admins, setAdmins] = useState<AdminAccount[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
@@ -31,7 +38,7 @@ export default function AdminManagement() {
   const [totalCount, setTotalCount] = useState(0);
   const [hasNext, setHasNext] = useState(false);
   const [hasPrevious, setHasPrevious] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(isSystemAdmin);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
@@ -40,13 +47,6 @@ export default function AdminManagement() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [phone, setPhone] = useState("");
-
-  const role =
-    localStorage.getItem("pawdigree_active_role") ||
-    localStorage.getItem("role") ||
-    "";
-
-  const isSystemAdmin = role.toUpperCase() === "SYSTEM_ADMIN";
 
   const loadAdmins = useCallback(async () => {
     setLoading(true);
@@ -73,8 +73,6 @@ export default function AdminManagement() {
   useEffect(() => {
     if (isSystemAdmin) {
       void loadAdmins();
-    } else {
-      setLoading(false);
     }
   }, [isSystemAdmin, loadAdmins]);
 
