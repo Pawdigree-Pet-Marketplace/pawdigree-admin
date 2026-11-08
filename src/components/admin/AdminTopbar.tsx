@@ -15,12 +15,12 @@ interface Props {
 const DEFAULT_AVATAR =
   "https://ui-avatars.com/api/?name=Super+Admin&background=E6F2F0&color=2A7F6F&bold=true";
 
-export const AdminTopbar = ({
+const AdminTopbar = ({
   onMenuClick,
   onLogout,
-  title = "Dashboard Overview",
-  breadcrumb = "Admin / Dashboard",
-  showBack = false,
+  title,
+  breadcrumb,
+  showBack,
   onBack,
   avatarUrl,
 }: Props) => (
@@ -78,3 +78,4 @@ export const AdminTopbar = ({
     </div>
   </header>
 );
+export default AdminTopbar;

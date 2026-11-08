@@ -1,30 +1,78 @@
-
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
+import { useNavigate } from "react-router-dom";
+import { createAdministrator } from "../services/adminManagementApi";
 import "./AdminForm.css";
 
 function AdminForm() {
-  const [fullName, setFullName] = useState("");
+  const navigate = useNavigate();
+
+  const [username, setUsername] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState("Admin");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
-  const [sendInvite, setSendInvite] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const role =
+    localStorage.getItem("pawdigree_active_role") ||
+    localStorage.getItem("role") ||
+    "";
+
+  if (role.toUpperCase() !== "SYSTEM_ADMIN") {
+    return (
+      <main className="admin-content">
+        <section className="admin-card">
+          <h2>Access restricted</h2>
+          <p>Only a SYSTEM_ADMIN account can create administrators.</p>
+        </section>
+      </main>
+    );
+  }
+
+  function generatePassword() {
+    const generated =
+      Math.random().toString(36).slice(-8) +
+      Math.random().toString(36).slice(-4).toUpperCase() +
+      "!";
+    setPassword(generated);
+  }
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setError("");
 
-    const form = event.currentTarget;
-
-    if (!form.checkValidity()) {
-      form.reportValidity();
+    if (!username.trim() || !firstName.trim() || !lastName.trim()) {
+      setError("Please complete the username and name fields.");
       return;
     }
 
-    alert(`Admin details entered for ${fullName} (${email}).`);
-  };
+    setIsLoading(true);
 
-  function generatePassword() {
-    const generated = Math.random().toString(36).slice(-10);
-    setPassword(generated);
+    try {
+      await createAdministrator({
+        username: username.trim(),
+        first_name: firstName.trim(),
+        last_name: lastName.trim(),
+        email: email.trim(),
+        phone: phone.trim(),
+        password,
+      });
+
+      navigate("/admin/users", {
+        replace: true,
+        state: { message: "Administrator created successfully." },
+      });
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Could not create administrator. Please try again.",
+      );
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return (
@@ -33,19 +81,50 @@ function AdminForm() {
         <div className="admin-card-heading">
           <h2>Add Admin</h2>
           <p>
-            Only Super Admins can create or edit admin accounts.
+            Create an administrator account. The backend assigns the ADMIN
+            role automatically.
           </p>
         </div>
 
+        {error && (
+          <div className="login-error" role="alert">
+            {error}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit}>
           <div className="admin-field">
-            <label htmlFor="fullName">Full Name*</label>
+            <label htmlFor="username">Username*</label>
             <input
-              id="fullName"
+              id="username"
               type="text"
-              placeholder="e.g. Chris Ouma"
-              value={fullName}
-              onChange={(event) => setFullName(event.target.value)}
+              placeholder="e.g. chris.ouma"
+              value={username}
+              onChange={(event) => setUsername(event.target.value)}
+              required
+            />
+          </div>
+
+          <div className="admin-field">
+            <label htmlFor="firstName">First Name*</label>
+            <input
+              id="firstName"
+              type="text"
+              placeholder="e.g. Chris"
+              value={firstName}
+              onChange={(event) => setFirstName(event.target.value)}
+              required
+            />
+          </div>
+
+          <div className="admin-field">
+            <label htmlFor="lastName">Last Name*</label>
+            <input
+              id="lastName"
+              type="text"
+              placeholder="e.g. Ouma"
+              value={lastName}
+              onChange={(event) => setLastName(event.target.value)}
               required
             />
           </div>
@@ -63,31 +142,28 @@ function AdminForm() {
           </div>
 
           <div className="admin-field">
-            <label htmlFor="role">Role</label>
-            <select
-              id="role"
-              value={role}
-              onChange={(event) => setRole(event.target.value)}
-            >
-              <option value="Admin">Admin</option>
-              <option value="Super Admin">Super Admin</option>
-              <option value="Support Admin">Support Admin</option>
-            </select>
+            <label htmlFor="phone">Phone</label>
+            <input
+              id="phone"
+              type="tel"
+              placeholder="e.g. +256..."
+              value={phone}
+              onChange={(event) => setPhone(event.target.value)}
+            />
           </div>
 
           <div className="admin-field">
             <label htmlFor="password">Temporary Password*</label>
-
             <div className="admin-password-wrapper">
               <input
                 id="password"
                 type="text"
-                placeholder="Auto-generated — editable"
+                placeholder="Enter or generate a password"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
+                minLength={8}
                 required
               />
-
               <button
                 type="button"
                 className="generate-password"
@@ -100,24 +176,20 @@ function AdminForm() {
             </div>
           </div>
 
-          <label className="admin-invite">
-            <input
-              type="checkbox"
-              checked={sendInvite}
-              onChange={(event) => setSendInvite(event.target.checked)}
-            />
-            <span>Send invite email</span>
-          </label>
-
           <div className="admin-form-actions">
-            <button type="submit" className="admin-btn admin-btn-save">
-              Create Admin
+            <button
+              type="submit"
+              className="admin-btn admin-btn-save"
+              disabled={isLoading}
+            >
+              {isLoading ? "Creating..." : "Create Admin"}
             </button>
 
             <button
               type="button"
               className="admin-btn admin-btn-cancel"
-              onClick={() => window.history.back()}
+              onClick={() => navigate("/admin/users")}
+              disabled={isLoading}
             >
               Cancel
             </button>
@@ -125,9 +197,7 @@ function AdminForm() {
         </form>
       </section>
 
-      <footer className="admin-footer">
-        © Pawdigree Admin
-      </footer>
+      <footer className="admin-footer">© Pawdigree Admin</footer>
     </div>
   );
 }

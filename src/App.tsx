@@ -2,41 +2,55 @@
 import { useState } from "react";
 import {
   BrowserRouter,
-  Routes,
+  Navigate,
   Route,
+  Routes,
   useLocation,
   useNavigate,
-  Navigate,
 } from "react-router-dom";
 
-import { AdminSidebar } from "./components/admin/AdminSidebar";
-import { AdminTopbar } from "./components/admin/AdminTopbar";
 import { AdminBottomNav } from "./components/admin/AdminBottomNav";
-import { AdminDashboard } from "./pages/AdminDashboard";
-import { VendorApplicationsPage } from "./pages/VendorApplicationsPage";
-import { CategoriesManagement } from "./pages/CategoriesManagement";
-import { ListingApprovalQueue } from "./pages/ListingApprovalQueue";
+import AdminTopbar from "./components/admin/AdminTopbar";
 
+import { AdminDashboard } from "./pages/AdminDashboard";
 import AdminForm from "./components/AdminForm";
 import AdminLoginPage from "./pages/auth/AdminLoginPage";
-import AdminAccessGate from "./components/auth/AdminAccessGate";
-
+import VendorApplicationsPage from "./pages/VendorApplicationsPage";
+import { AdminSidebar } from "./components/admin/AdminSidebar";
+import { CategoriesManagement } from "./pages/CategoriesManagement";
+import { ListingApprovalQueue } from "./pages/ListingApprovalQueue";
 const PAGE_INFO: Record<string, { title: string; breadcrumb: string }> = {
-  "/admin/listings/categories": {
-    title: "Vendor Categories",
-    breadcrumb: "Admin / Listings / Categories",
+  "/": {
+    title: "Admin Dashboard",
+    breadcrumb: "Admin / Dashboard",
   },
-  "/admin/listings/approval": {
-    title: "Listing Approval Queue",
-    breadcrumb: "Admin / Listings / Approval Queue",
+  "/dashboard": {
+    title: "Admin Dashboard",
+    breadcrumb: "Admin / Dashboard",
+  },
+  "/admin": {
+    title: "Admin Dashboard",
+    breadcrumb: "Admin / Dashboard",
+  },
+  "/admin/dashboard": {
+    title: "Admin Dashboard",
+    breadcrumb: "Admin / Dashboard",
+  },
+  "/admin-form": {
+    title: "Admin Management",
+    breadcrumb: "Admin / Management",
   },
   "/admin/vendors": {
     title: "Vendor Applications",
     breadcrumb: "Admin / Vendors",
   },
-  "/admin-form": {
-    title: "Admin Management",
-    breadcrumb: "Admin / Management",
+  "/admin/listings/categories": {
+    title: "Categories Management",
+    breadcrumb: "Admin / Listings / Categories",
+  },
+  "/admin/listings/approval": {
+    title: "Listing Approval",
+    breadcrumb: "Admin / Listings / Approval",
   },
 };
 
@@ -62,6 +76,8 @@ function Layout() {
     localStorage.removeItem("refresh");
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
+    localStorage.removeItem("role");
+    localStorage.removeItem("pawdigree_active_role");
 
     navigate("/login", { replace: true });
   }
@@ -71,8 +87,7 @@ function Layout() {
     breadcrumb: "Admin / Dashboard",
   };
 
-return (
-  <AdminAccessGate>
+  return (
     <>
       <AdminSidebar
         isOpen={open}
@@ -95,7 +110,7 @@ return (
           <Route path="/dashboard" element={<AdminDashboard />} />
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
-          <Route path="/admin-form" element={<AdminForm />} />
+
           <Route path="/admin-form" element={<AdminForm />} />
 
           <Route
@@ -122,9 +137,9 @@ return (
 
       <AdminBottomNav currentPath={location.pathname} />
     </>
-  </AdminAccessGate>
-);
+  );
 }
+
 function App() {
   return (
     <BrowserRouter>
