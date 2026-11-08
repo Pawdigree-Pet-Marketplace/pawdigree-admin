@@ -71,11 +71,14 @@ export default function AdminManagement() {
   }, [page]);
 
   useEffect(() => {
-    if (isSystemAdmin) {
-      void loadAdmins();
-    }
-  }, [isSystemAdmin, loadAdmins]);
+  if (!isSystemAdmin) return;
 
+  const timer = window.setTimeout(() => {
+    void loadAdmins();
+  }, 0);
+
+  return () => window.clearTimeout(timer);
+}, [isSystemAdmin, loadAdmins]);
   const filteredAdmins = useMemo(() => {
     const search = searchTerm.trim().toLowerCase();
 
