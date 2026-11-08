@@ -16,14 +16,20 @@ const DEFAULT_AVATAR =
 const AdminTopbar = ({
   onMenuClick,
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
   title = "Dashboard Overview",
   breadcrumb = "Admin / Dashboard",
   showBack = false,
 =======
+=======
+>>>>>>> Stashed changes
   onLogout,
   title,
   breadcrumb,
   showBack,
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
   onBack,
   avatarUrl,

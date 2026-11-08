@@ -1,7 +1,13 @@
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import logo from "../assets/logos/lightmode-logo.svg";
+=======
+import { useState, type FormEvent } from "react";
+import { useNavigate } from "react-router-dom";
+import { createAdministrator } from "../services/adminManagementApi";
+>>>>>>> Stashed changes
 =======
 import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
@@ -25,6 +31,7 @@ function AdminForm() {
     localStorage.getItem("pawdigree_active_role") ||
     localStorage.getItem("role") ||
     "";
+<<<<<<< Updated upstream
 
   if (role.toUpperCase() !== "SYSTEM_ADMIN") {
     return (
@@ -43,6 +50,62 @@ function AdminForm() {
       Math.random().toString(36).slice(-4).toUpperCase() +
       "!";
     setPassword(generated);
+=======
+
+  if (role.toUpperCase() !== "SYSTEM_ADMIN") {
+    return (
+      <main className="admin-content">
+        <section className="admin-card">
+          <h2>Access restricted</h2>
+          <p>Only a SYSTEM_ADMIN account can create administrators.</p>
+        </section>
+      </main>
+    );
+  }
+
+  function generatePassword() {
+    const generated =
+      Math.random().toString(36).slice(-8) +
+      Math.random().toString(36).slice(-4).toUpperCase() +
+      "!";
+    setPassword(generated);
+  }
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError("");
+
+    if (!username.trim() || !firstName.trim() || !lastName.trim()) {
+      setError("Please complete the username and name fields.");
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      await createAdministrator({
+        username: username.trim(),
+        first_name: firstName.trim(),
+        last_name: lastName.trim(),
+        email: email.trim(),
+        phone: phone.trim(),
+        password,
+      });
+
+      navigate("/admin/users", {
+        replace: true,
+        state: { message: "Administrator created successfully." },
+      });
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Could not create administrator. Please try again.",
+      );
+    } finally {
+      setIsLoading(false);
+    }
+>>>>>>> Stashed changes
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -201,6 +264,7 @@ function AdminForm() {
           </div>
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
           <div className="admin-header-actions">
             <label className="admin-search">
               <span aria-hidden="true">⌕</span>
@@ -209,6 +273,8 @@ function AdminForm() {
 
             <span className="admin-badge">Super Admin</span>
 =======
+=======
+>>>>>>> Stashed changes
           <div className="admin-form-actions">
             <button
               type="submit"
@@ -230,6 +296,7 @@ function AdminForm() {
           </div>
         </header>
 
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
         {/* Page body */}
         <main className="admin-content">
@@ -328,6 +395,9 @@ function AdminForm() {
           </footer>
         </main>
       </div>
+=======
+      <footer className="admin-footer">© Pawdigree Admin</footer>
+>>>>>>> Stashed changes
 =======
       <footer className="admin-footer">© Pawdigree Admin</footer>
 >>>>>>> Stashed changes

@@ -52,6 +52,7 @@ function Layout() {
   const location = useLocation();
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
   return (
     <>
       <AdminSidebar
@@ -80,6 +81,8 @@ function Layout() {
       <AdminBottomNav currentPath={location.pathname} />
     </>
 =======
+=======
+>>>>>>> Stashed changes
   // Show login without the dashboard layout.
   if (location.pathname === "/login") {
     return <AdminLoginPage />;
@@ -164,6 +167,9 @@ function Layout() {
         <AdminBottomNav currentPath={location.pathname} />
       </>
     </AdminAccessGate>
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
   );
 }
