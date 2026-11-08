@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import lightLogo from "../../assets/logos/lightmode-logo.svg";
 import {
   LayoutDashboard,
@@ -13,6 +14,7 @@ import {
   MessageCircleWarning,
   BarChart3,
   ClipboardList,
+  ClipboardCheck,
   Bell,
   UserRound,
   Settings,
@@ -46,6 +48,7 @@ const NAV = [
     title: "LISTINGS",
     items: [
       { label: "Pet Listings", path: "/admin/listings/pets", Icon: PawPrint },
+      { label: "Approval Queue", path: "/admin/listings/approval", Icon: ClipboardCheck },
       {
         label: "Merch Listings",
         path: "/admin/listings/merch",
@@ -133,7 +136,7 @@ export const AdminSidebar = ({
       />
       <aside className={`admin-sidebar ${isOpen ? "open" : ""}`}>
         <div className="admin-sidebar-head">
-          <a href="/admin" className="admin-sidebar-brand">
+          <Link to="/admin" className="admin-sidebar-brand">
             <img
               src={lightLogo}
               alt="Pawdigree"
@@ -142,7 +145,7 @@ export const AdminSidebar = ({
                 (e.target as HTMLImageElement).style.display = "none";
               }}
             />
-          </a>
+          </Link>
           <button className="admin-sidebar-close" onClick={onClose}>
             <X size={18} />
           </button>
@@ -152,14 +155,14 @@ export const AdminSidebar = ({
             <div key={g.title} className="admin-sidebar-group">
               <p className="admin-sidebar-group-title">{g.title}</p>
               {g.items.map(({ label, path, Icon }) => (
-                <a
+                <Link
                   key={path}
-                  href={path}
+                  to={path}
                   className={`admin-sidebar-link ${currentPath === path ? "active" : ""}`}
                 >
                   <Icon size={18} />
                   <span>{label}</span>
-                </a>
+                </Link>
               ))}
             </div>
           ))}

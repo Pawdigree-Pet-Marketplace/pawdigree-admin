@@ -1,13 +1,15 @@
-import { ArrowLeft, Bell, Menu } from "lucide-react";
+
+import { ArrowLeft, Bell, Menu, LogOut } from "lucide-react";
 import "./AdminTopbar.css";
 
 interface Props {
   onMenuClick: () => void;
+  onLogout: () => void;
   title?: string;
   breadcrumb?: string;
   showBack?: boolean;
   onBack?: () => void;
-  avatarUrl?: string; // optional - will use default if not provided
+  avatarUrl?: string;
 }
 
 const DEFAULT_AVATAR =
@@ -15,8 +17,6 @@ const DEFAULT_AVATAR =
 
 const AdminTopbar = ({
   onMenuClick,
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
   title = "Dashboard Overview",
   breadcrumb = "Admin / Dashboard",
   showBack = false,
@@ -43,21 +43,29 @@ const AdminTopbar = ({
       >
         <Menu size={22} />
       </button>
+
       {showBack && (
         <button className="admin-topbar-back" onClick={onBack}>
           <ArrowLeft size={18} /> <span>Back</span>
         </button>
       )}
+
       <div className="admin-topbar-titles">
         <span className="crumb">{breadcrumb}</span>
         <h1 className="page-title">{title}</h1>
       </div>
     </div>
+
     <div className="admin-topbar-right">
       <span className="admin-topbar-badge">Super Admin</span>
-      <button className="admin-topbar-icon has-dot" aria-label="Notifications">
+
+      <button
+        className="admin-topbar-icon has-dot"
+        aria-label="Notifications"
+      >
         <Bell size={18} />
       </button>
+
       <button className="admin-topbar-profile" aria-label="Profile">
         <img
           src={avatarUrl || DEFAULT_AVATAR}
@@ -67,6 +75,15 @@ const AdminTopbar = ({
             (e.target as HTMLImageElement).src = DEFAULT_AVATAR;
           }}
         />
+      </button>
+
+      <button
+        className="admin-topbar-icon"
+        onClick={onLogout}
+        aria-label="Log out"
+        title="Log out"
+      >
+        <LogOut size={18} />
       </button>
     </div>
   </header>
