@@ -1,4 +1,3 @@
-
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   adminApi,
@@ -17,6 +16,7 @@ import {
   ShieldCheck,
   FileText,
   Building2,
+  Store,
   MapPin,
   Phone,
   Mail,
@@ -200,11 +200,12 @@ export function VendorApplicationsPage() {
   const [submittingDecision, setSubmittingDecision] = useState(false);
   const [error, setError] = useState("");
   const [page, setPage] = useState(1);
-  const [totalCount, setTotalCount] = useState(0);
+  const [totalVendors, setTotalVendors] = useState(0);
+  const [totalBusinesses, setTotalBusinesses] = useState(0);
   const [nextPage, setNextPage] = useState<string | null>(null);
   const [previousPage, setPreviousPage] = useState<string | null>(null);
 
-    // Fetch vendor applications in one place.
+  // Fetch vendor applications in one place.
   const loadApplications = useCallback(async () => {
     try {
       const response = await adminApi.getVendorApplications("all", page);
@@ -215,7 +216,6 @@ export function VendorApplicationsPage() {
       );
 
       setApplications(submittedApplications.map(mapVendorApplication));
-      setTotalCount(response.count);
       setNextPage(response.next);
       setPreviousPage(response.previous);
       setError("");
@@ -226,7 +226,6 @@ export function VendorApplicationsPage() {
           : "Unable to load vendor applications. Please try again.",
       );
       setApplications([]);
-      setTotalCount(0);
       setNextPage(null);
       setPreviousPage(null);
     } finally {
@@ -234,7 +233,33 @@ export function VendorApplicationsPage() {
     }
   }, [page]);
 
-    // Reload when the page changes.
+  // Load unique vendor and total business counts across every API page.
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchTotals = async () => {
+      try {
+        const totals = await adminApi.getVendorApplicationTotals();
+
+        if (cancelled) return;
+
+        setTotalVendors(totals.totalVendors);
+        setTotalBusinesses(totals.totalBusinesses);
+      } catch (err) {
+        if (!cancelled) {
+          console.error("Unable to load vendor and business totals:", err);
+        }
+      }
+    };
+
+    void fetchTotals();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Reload when the page changes.
   useEffect(() => {
     let cancelled = false;
 
@@ -276,7 +301,8 @@ export function VendorApplicationsPage() {
 
   // Status counts are based on the currently loaded API page.
   const counts = {
-    total: totalCount,
+    vendors: totalVendors,
+    businesses: totalBusinesses,
     pending: applications.filter((item) => item.status === "Pending").length,
     approved: applications.filter((item) => item.status === "Approved").length,
     suspended: applications.filter((item) => item.status === "Suspended").length,
@@ -441,8 +467,7 @@ export function VendorApplicationsPage() {
           </button>
         </div>
       )}
-
-      {/* Clickable vendor statistics cards */}
+            {/* Clickable vendor statistics cards */}
       <div className="vendor-stats-grid">
         <button
           type="button"
@@ -457,7 +482,21 @@ export function VendorApplicationsPage() {
           </div>
           <div>
             <p>Total Vendors</p>
-            <h2>{counts.total}</h2>
+            <h2>{counts.vendors}</h2>
+          </div>
+        </button>
+
+        <button
+          type="button"
+          className="vendor-stat-card vendor-stat-card-clickable"
+          onClick={() => selectStatusFilter("All")}
+        >
+          <div className="vendor-stat-icon">
+            <Store size={22} />
+          </div>
+          <div>
+            <p>Total Businesses</p>
+            <h2>{counts.businesses}</h2>
           </div>
         </button>
 
@@ -660,8 +699,7 @@ export function VendorApplicationsPage() {
           Next
         </button>
       </div>
-
-      {selectedApplication && (
+            {selectedApplication && (
         <div
           className="vendor-review-overlay"
           onClick={(event) => {
@@ -822,8 +860,7 @@ export function VendorApplicationsPage() {
                 <p>{selectedApplication.reviewMessage}</p>
               </div>
             )}
-
-            {selectedApplication.status !== "Draft" &&
+                        {selectedApplication.status !== "Draft" &&
               selectedApplication.status !== "Rejected" && (
                 <div className="vendor-detail-section">
                   <label
