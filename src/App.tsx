@@ -19,6 +19,7 @@ import VendorApplicationsPage from "./pages/VendorApplicationsPage";
 import { AdminSidebar } from "./components/admin/AdminSidebar";
 import { CategoriesManagement } from "./pages/CategoriesManagement";
 import { ListingApprovalQueue } from "./pages/ListingApprovalQueue";
+import AdminManagement from "./pages/auth/AdminManagement.tsx";
 const PAGE_INFO: Record<string, { title: string; breadcrumb: string }> = {
   "/": {
     title: "Admin Dashboard",
@@ -110,7 +111,7 @@ function Layout() {
           <Route path="/dashboard" element={<AdminDashboard />} />
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
-
+          <Route path="/adminManagement" element={<AdminManagement />} /> 
           <Route path="/admin-form" element={<AdminForm />} />
 
           <Route
