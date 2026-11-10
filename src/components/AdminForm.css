@@ -67,125 +67,88 @@
   margin-bottom: 1px;
 }
 
-.admin-heading h1 {
-  font-size: 20px;
-  line-height: 1.2;
-  margin: 0;
-  font-weight: 700;
-}
-
-.admin-header-actions {
-  display: flex;
-  align-items: center;
-  gap: 56px;
-}
-
-.admin-search {
-  width: 220px;
-  height: 35px;
-  border-radius: 22px;
-  background: #f4f6f5;
-  display: flex;
-  align-items: center;
-  padding: 0 15px;
-  gap: 10px;
-  color: #707773;
-}
-
-.admin-search span {
-  font-size: 17px;
-  font-weight: bold;
-}
-
-.admin-search input {
-  width: 100%;
-  border: 0;
-  outline: none;
-  background: transparent;
-  font: inherit;
-  min-width: 0;
-}
-
-.admin-search input:focus {
-  outline: none;
-}
-
-.admin-badge {
-  background: #ffe2d9;
-  color: #d95332;
-  padding: 6px 13px;
-  border-radius: 20px;
-  font-size: 11px;
-  white-space: nowrap;
-}
-
-/* Main page content */
 .admin-content {
-  padding: 40px 32px 0;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding: 32px clamp(16px, 4vw, 48px) 24px;
+  color: #2C302F;
+  font-family: "Nunito", Arial, sans-serif;
+}
+
+.admin-content *,
+.admin-content *::before,
+.admin-content *::after {
+  box-sizing: border-box;
 }
 
 .admin-card {
-  width: 600px;
-  max-width: 100%;
+  width: min(100%, 720px);
   margin: 0 auto;
-  padding: 23px 16px 36px;
-  background: #ffffff;
-  border: 1px solid #e0e6e3;
-  border-radius: 17px;
+  padding: clamp(22px, 4vw, 36px);
+  background: #FFFFFF;
+  border: 1px solid #e5e9e6;
+  border-radius: 18px;
+  box-shadow: 0 8px 28px rgba(44, 48, 47, 0.06);
 }
 
 .admin-card-heading {
-  margin-bottom: 17px;
+  margin-bottom: 26px;
 }
 
 .admin-card-heading h2 {
-  font-size: 19px;
-  font-weight: 700;
-  margin: 0 0 5px;
+  margin: 0 0 8px;
+  color: #216C68;
+  font-family: "Fredoka", "Nunito", Arial, sans-serif;
+  font-size: clamp(22px, 3vw, 28px);
+  font-weight: 600;
+  line-height: 1.25;
 }
 
 .admin-card-heading p {
-  color: #777e7a;
-  font-size: 12px;
   margin: 0;
-  line-height: 1.5;
+  color: #68716d;
+  font-size: 14px;
+  line-height: 1.6;
 }
 
 /* Form fields */
 .admin-field {
-  margin-bottom: 12px;
+  margin-bottom: 20px;
 }
 
 .admin-field > label {
   display: block;
-  font-size: 12px;
+  margin-bottom: 8px;
+  color: #2C302F;
+  font-size: 14px;
   font-weight: 700;
-  margin-bottom: 7px;
 }
 
 .admin-field input,
 .admin-field select {
+  display: block;
   width: 100%;
-  height: 43px;
-  padding: 0 13px;
-  border: 1px solid #dfe5e2;
-  border-radius: 9px;
-  background: #ffffff;
-  color: #343936;
-  font-family: inherit;
-  font-size: 13px;
+  min-height: 46px;
+  padding: 11px 14px;
+  border: 1px solid #d8e0dc;
+  border-radius: 10px;
+  background: #FFFFFF;
+  color: #2C302F;
+  font: inherit;
+  font-size: 14px;
   outline: none;
-  transition: border-color 0.2s;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
 }
 
 .admin-field input::placeholder {
-  color: #777e7a;
-  opacity: 1;
+  color: #929a96;
 }
 
 .admin-field input:focus,
 .admin-field select:focus {
-  border-color: #11805b;
+  border-color: #216C68;
+  box-shadow: 0 0 0 3px rgba(33, 108, 104, 0.12);
 }
 
 .admin-field select {
@@ -197,24 +160,34 @@
 }
 
 .admin-password-wrapper input {
-  padding-right: 42px;
+  padding-right: 52px;
 }
 
 .generate-password {
   position: absolute;
-  right: 10px;
   top: 50%;
+  right: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
   transform: translateY(-50%);
-  background: transparent;
-  border: none;
-  color: #777e7a;
-  font-size: 20px;
+  border: 0;
+  border-radius: 8px;
+  background: #F7F3E8;
+  color: #216C68;
+  font-size: 22px;
   cursor: pointer;
-  display: none;
 }
 
-.admin-password-wrapper:focus-within .generate-password {
-  display: block;
+.generate-password:hover {
+  background: #e9e2d2;
+}
+
+.generate-password:focus-visible {
+  outline: 2px solid #216C68;
+  outline-offset: 2px;
 }
 
 /* Invite checkbox */
@@ -222,20 +195,21 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  margin: 4px 0 0;
+  color: #2C302F;
+  font-size: 14px;
   cursor: pointer;
-  margin-top: -5px;
-  font-size: 13px;
 }
 
 .admin-invite input {
   width: 18px;
   height: 18px;
   margin: 0;
-  accent-color: #10805b;
+  accent-color: #216C68;
   cursor: pointer;
 }
 
-/* Buttons */
+/* Form actions */
 .admin-form-actions {
   display: flex;
   flex-wrap: wrap;
@@ -245,44 +219,43 @@
 
 .admin-btn {
   display: inline-flex;
-  justify-content: center;
   align-items: center;
-  width: 130px;
-  height: 42px;
-  border: none;
-  border-radius: 9px;
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 700;
+  justify-content: center;
+  min-width: 140px;
+  min-height: 44px;
+  padding: 11px 20px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  font-family: "Nunito", Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 800;
   text-decoration: none;
   cursor: pointer;
-  transition: opacity 0.2s, transform 0.2s;
+  transition: background 160ms ease, transform 160ms ease;
 }
 
-.admin-btn:hover {
-  opacity: 0.9;
-  transform: translateY(-1px);
+.admin-btn:focus-visible {
+  outline: 3px solid rgba(33, 108, 104, 0.25);
+  outline-offset: 2px;
 }
 
 .admin-btn-save {
-  background: #107e59;
-  color: #ffffff;
+  background: #216C68;
+  color: #FFFFFF;
+}
+
+.admin-btn-save:hover {
+  background: #185653;
+  transform: translateY(-1px);
 }
 
 .admin-btn-cancel {
-  background: #c71919;
-  color: #000000;
+  border-color: #d8e0dc;
+  background: #FFFFFF;
+  color: #2C302F;
 }
 
-/* Footer */
-.admin-footer {
-  border-top: 1px solid #e3e9e6;
-  margin-top: 38px;
-  padding: 14px 0;
-  color: #777e7a;
-  font-size: 11px;
-}
-
+/* Responsive tablet layout */
 /* Responsive tablet layout */
 @media (max-width: 1000px) {
   .admin-layout .admin-sidebar {
@@ -353,30 +326,19 @@
     width: auto;
     max-width: 260px;
   }
+}
 
-  .admin-content {
-    padding: 22px 14px 0;
-  }
+.admin-btn-cancel:hover {
+  background: #F7F3E8;
+}
 
-  .admin-card {
-    padding: 22px 16px 26px;
-    border-radius: 13px;
-  }
-
-  .admin-card-heading h2 {
-    font-size: 18px;
-  }
-
-  .admin-form-actions {
-    gap: 10px;
-  }
-
-  .admin-btn {
-    flex: 1;
-    min-width: 110px;
-  }
-
-  .admin-footer {
-    margin-top: 25px;
-  }
+/* Footer */
+.admin-footer {
+  width: min(100%, 720px);
+  margin: 26px auto 0;
+  padding: 16px 0;
+  border-top: 1px solid #e5e9e6;
+  color: #77817c;
+  font-size: 12px;
+  text-align: center;
 }

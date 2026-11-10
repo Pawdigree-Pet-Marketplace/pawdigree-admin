@@ -1,45 +1,67 @@
-
 import { useState } from "react";
 import {
   BrowserRouter,
-  Routes,
+  Navigate,
   Route,
+  Routes,
   useLocation,
   useNavigate,
-  Navigate,
 } from "react-router-dom";
 
-import { AdminSidebar } from "./components/admin/AdminSidebar";
-import { AdminTopbar } from "./components/admin/AdminTopbar";
 import { AdminBottomNav } from "./components/admin/AdminBottomNav";
+import AdminTopbar from "./components/admin/AdminTopbar";
+import { AdminSidebar } from "./components/admin/AdminSidebar";
 
 import { AdminDashboard } from "./pages/AdminDashboard";
-import { VendorApplicationsPage } from "./pages/VendorApplicationsPage";
-import { CategoriesManagement } from "./pages/CategoriesManagement";
-import { ListingApprovalQueue } from "./pages/ListingApprovalQueue";
-
 import AdminForm from "./components/AdminForm";
 import AdminLoginPage from "./pages/auth/AdminLoginPage";
 import AdminAccessGate from "./components/auth/AdminAccessGate";
 
-const PAGE_INFO: Record<string, { title: string }> = {
-  "/admin/listings/categories": {
-    title: "Vendor Categories",
+import VendorApplicationsPage from "./pages/VendorApplicationsPage";
+import { CategoriesManagement } from "./pages/CategoriesManagement";
+import { ListingApprovalQueue } from "./pages/ListingApprovalQueue";
+
+const PAGE_INFO: Record<
+  string,
+  { title: string; breadcrumb?: string }
+> = {
+  "/": {
+    title: "Admin Dashboard",
+    breadcrumb: "Admin / Dashboard",
   },
-  "/admin/listings/approval": {
-    title: "Listing Approval Queue",
+  "/dashboard": {
+    title: "Admin Dashboard",
+    breadcrumb: "Admin / Dashboard",
   },
-  "/admin/vendors": {
-    title: "Vendor Applications",
+  "/admin": {
+    title: "Admin Dashboard",
+    breadcrumb: "Admin / Dashboard",
+  },
+  "/admin/dashboard": {
+    title: "Admin Dashboard",
+    breadcrumb: "Admin / Dashboard",
   },
   "/admin-form": {
     title: "Admin Management",
+  },
+  "/admin/vendors": {
+    title: "Vendor Applications",
+    breadcrumb: "Admin / Vendors",
+  },
+  "/admin/listings/categories": {
+    title: "Categories Management",
+    breadcrumb: "Admin / Listings / Categories",
+  },
+  "/admin/listings/approval": {
+    title: "Listing Approval",
+    breadcrumb: "Admin / Listings / Approval",
   },
 };
 
 function Layout() {
   const [open, setOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -60,6 +82,8 @@ function Layout() {
     localStorage.removeItem("refresh");
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
+    localStorage.removeItem("role");
+    localStorage.removeItem("pawdigree_active_role");
 
     navigate("/login", { replace: true });
   }
@@ -68,61 +92,68 @@ function Layout() {
     title: "Admin Dashboard",
   };
 
-return (
-  <AdminAccessGate>
-    <div className={`admin-shell ${sidebarCollapsed ? "sidebar-collapsed" : ""}`}>
-      <AdminSidebar
-        isOpen={open}
-        onClose={() => setOpen(false)}
-        currentPath={location.pathname}
-        isCollapsed={sidebarCollapsed}
-        onToggleCollapse={() => setSidebarCollapsed((collapsed) => !collapsed)}
-      />
+  return (
+    <AdminAccessGate>
+      <div
+        className={`admin-shell ${
+          sidebarCollapsed ? "sidebar-collapsed" : ""
+        }`}
+      >
+        <AdminSidebar
+          isOpen={open}
+          onClose={() => setOpen(false)}
+          currentPath={location.pathname}
+          isCollapsed={sidebarCollapsed}
+          onToggleCollapse={() =>
+            setSidebarCollapsed((collapsed) => !collapsed)
+          }
+        />
 
-      <AdminTopbar
-        onMenuClick={() => setOpen(true)}
-        onLogout={handleLogout}
-        title={page.title}
-      />
+        <AdminTopbar
+          onMenuClick={() => setOpen(true)}
+          onLogout={handleLogout}
+          title={page.title}
+        />
 
-      <div className="admin-topbar-spacer" />
+        <div className="admin-topbar-spacer" />
 
-      <div className="admin-page-content">
-        <Routes>
-          <Route path="/" element={<AdminDashboard />} />
-          <Route path="/dashboard" element={<AdminDashboard />} />
-          <Route path="/admin" element={<AdminDashboard />} />
-          <Route path="/admin/dashboard" element={<AdminDashboard />} />
+        <div className="admin-page-content">
+          <Routes>
+            <Route path="/" element={<AdminDashboard />} />
+            <Route path="/dashboard" element={<AdminDashboard />} />
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
 
-          <Route path="/admin-form" element={<AdminForm />} />
+            <Route path="/admin-form" element={<AdminForm />} />
 
-          <Route
-            path="/admin/vendors"
-            element={<VendorApplicationsPage />}
-          />
+            <Route
+              path="/admin/vendors"
+              element={<VendorApplicationsPage />}
+            />
 
-          <Route
-            path="/admin/listings/categories"
-            element={<CategoriesManagement />}
-          />
+            <Route
+              path="/admin/listings/categories"
+              element={<CategoriesManagement />}
+            />
 
-          <Route
-            path="/admin/listings/approval"
-            element={<ListingApprovalQueue />}
-          />
+            <Route
+              path="/admin/listings/approval"
+              element={<ListingApprovalQueue />}
+            />
 
-          <Route
-            path="*"
-            element={<Navigate to="/admin/dashboard" replace />}
-          />
-        </Routes>
+            <Route
+              path="*"
+              element={<Navigate to="/admin/dashboard" replace />}
+            />
+          </Routes>
+        </div>
+
+        <AdminBottomNav currentPath={location.pathname} />
       </div>
-
-      <AdminBottomNav currentPath={location.pathname} />
-    </div>
-  </AdminAccessGate>
-);
+    </AdminAccessGate>
+  );
 }
+
 function App() {
   return (
     <BrowserRouter>
