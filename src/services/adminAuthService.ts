@@ -28,6 +28,7 @@ export async function adminLogin(
     "/auth/login/admin/",
     {
       method: "POST",
+      skipAuth: true,
       body: JSON.stringify({
         email: email.trim(),
         password,

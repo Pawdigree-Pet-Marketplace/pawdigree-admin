@@ -1,7 +1,22 @@
 import { apiRequest, type ApiRecord, unwrapList } from "./api";
 
-export interface Category extends ApiRecord { id: number | string; name: string; description?: string; is_active?: boolean; active?: boolean; }
-export interface PendingPet extends ApiRecord { id: number | string; name?: string; species?: string; breed?: string; age?: string | number; price?: string | number; created_at?: string; }
+export interface Category extends ApiRecord {
+  id: number | string;
+  name: string;
+  description?: string;
+  is_active?: boolean;
+  active?: boolean;
+}
+
+export interface PendingPet extends ApiRecord {
+  id: number | string;
+  name?: string;
+  species?: string;
+  breed?: string;
+  age?: string | number;
+  price?: string | number;
+  created_at?: string;
+}
 
 export type VendorApiStatus =
   | "pending"
@@ -61,21 +76,106 @@ export interface PaginatedVendorApplications {
   results: VendorApplicationApi[];
 }
 
+export interface VendorApplicationTotals {
+  totalVendors: number;
+  totalBusinesses: number;
+}
+
 export type VendorDecision =
   | "approve"
   | "request_changes"
   | "suspend"
   | "reapprove";
 
+// Get the total number of unique vendors and businesses
+// using the existing paginated backend endpoint.
+async function fetchVendorApplicationTotals(): Promise<VendorApplicationTotals> {
+  let page = 1;
+  let response: PaginatedVendorApplications;
+  const vendorUsernames = new Set<string>();
+  let totalBusinesses = 0;
+
+  do {
+    const query = new URLSearchParams({
+      status: "all",
+      page: String(page),
+    });
+
+    response = await apiRequest<PaginatedVendorApplications>(
+      `/businesses/admin/?${query.toString()}`,
+    );
+
+    if (page === 1) {
+      totalBusinesses = response.count;
+    }
+
+    response.results.forEach((business) => {
+      if (business.vendor_username) {
+        vendorUsernames.add(business.vendor_username);
+      }
+    });
+
+    page += 1;
+  } while (response.next);
+
+  return {
+    totalVendors: vendorUsernames.size,
+    totalBusinesses,
+  };
+}
+
 export const adminApi = {
-  async getCategories() { return unwrapList<Category>(await apiRequest<unknown>("/categories/")); },
-  createCategory(data: { name: string; description: string }) { return apiRequest<Category>("/categories/", { method: "POST", body: JSON.stringify(data) }); },
-  updateCategory(id: Category["id"], data: { name: string; description: string }) { return apiRequest<Category>(`/categories/${id}/`, { method: "PATCH", body: JSON.stringify(data) }); },
-  deactivateCategory(id: Category["id"]) { return apiRequest<void>(`/categories/${id}/`, { method: "DELETE" }); },
-  async getPendingPets() { return unwrapList<PendingPet>(await apiRequest<unknown>("/pets/admin/pending/")); },
-  approvePet(id: PendingPet["id"]) { return apiRequest<unknown>(`/pets/admin/${id}/approve/`, { method: "POST" }); },
-  rejectPet(id: PendingPet["id"], reason: string) { return apiRequest<unknown>(`/pets/admin/${id}/reject/`, { method: "POST", body: JSON.stringify({ reason }) }); },
-  async getVendorApplications(status: VendorApiStatus | "all" = "pending",page = 1,
+  async getCategories() {
+    return unwrapList<Category>(
+      await apiRequest<unknown>("/categories/")
+    );
+  },
+
+  createCategory(data: { name: string; description: string }) {
+    return apiRequest<Category>("/categories/", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  },
+
+  updateCategory(
+    id: Category["id"],
+    data: { name: string; description: string }
+  ) {
+    return apiRequest<Category>(`/categories/${id}/`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    });
+  },
+
+  deactivateCategory(id: Category["id"]) {
+    return apiRequest<void>(`/categories/${id}/`, {
+      method: "DELETE",
+    });
+  },
+
+  async getPendingPets() {
+    return unwrapList<PendingPet>(
+      await apiRequest<unknown>("/pets/admin/pending/")
+    );
+  },
+
+  approvePet(id: PendingPet["id"]) {
+    return apiRequest<unknown>(`/pets/admin/${id}/approve/`, {
+      method: "POST",
+    });
+  },
+
+  rejectPet(id: PendingPet["id"], reason: string) {
+    return apiRequest<unknown>(`/pets/admin/${id}/reject/`, {
+      method: "POST",
+      body: JSON.stringify({ reason }),
+    });
+  },
+
+  async getVendorApplications(
+    status: VendorApiStatus | "all" = "pending",
+    page = 1
   ) {
     const query = new URLSearchParams({
       status,
@@ -83,20 +183,24 @@ export const adminApi = {
     });
 
     return apiRequest<PaginatedVendorApplications>(
-      `/businesses/admin/?${query.toString()}`,
+      `/businesses/admin/?${query.toString()}`
     );
   },
 
+  // Counts unique vendor accounts and all business records.
+  // Uses the existing backend endpoint; no backend changes needed.
+  getVendorApplicationTotals: fetchVendorApplicationTotals,
+
   getVendorApplication(id: string) {
     return apiRequest<VendorApplicationApi>(
-      `/businesses/admin/${id}/`,
+      `/businesses/admin/${id}/`
     );
   },
 
   decideVendorApplication(
     id: string,
     action: VendorDecision,
-    reason?: string,
+    reason?: string
   ) {
     return apiRequest<{
       business_id: string;
@@ -125,5 +229,4 @@ export const adminApi = {
       }>
     >(`/businesses/admin/${id}/decisions/`);
   },
-
 };

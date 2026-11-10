@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import {
   BrowserRouter,
@@ -8,15 +7,19 @@ import {
   useLocation,
   useNavigate,
 } from "react-router-dom";
+import { Link } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 
 import { AdminBottomNav } from "./components/admin/AdminBottomNav";
 import AdminTopbar from "./components/admin/AdminTopbar";
-
+import { AdminSidebar } from "./components/admin/AdminSidebar";
+import AdminManagement from "./pages/auth/AdminManagement";
 import { AdminDashboard } from "./pages/AdminDashboard";
 import AdminForm from "./components/AdminForm";
 import AdminLoginPage from "./pages/auth/AdminLoginPage";
+import AdminAccessGate from "./components/auth/AdminAccessGate";
+
 import VendorApplicationsPage from "./pages/VendorApplicationsPage";
-import { AdminSidebar } from "./components/admin/AdminSidebar";
 import { CategoriesManagement } from "./pages/CategoriesManagement";
 import { ListingApprovalQueue } from "./pages/ListingApprovalQueue";
 import AdminManagement from "./pages/auth/AdminManagement.tsx";
@@ -39,7 +42,6 @@ const PAGE_INFO: Record<string, { title: string; breadcrumb: string }> = {
   },
   "/admin-form": {
     title: "Admin Management",
-    breadcrumb: "Admin / Management",
   },
   "/admin/vendors": {
     title: "Vendor Applications",
@@ -57,6 +59,8 @@ const PAGE_INFO: Record<string, { title: string; breadcrumb: string }> = {
 
 function Layout() {
   const [open, setOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -85,7 +89,6 @@ function Layout() {
 
   const page = PAGE_INFO[location.pathname] || {
     title: "Admin Dashboard",
-    breadcrumb: "Admin / Dashboard",
   };
 
   return (
@@ -135,9 +138,7 @@ function Layout() {
           />
         </Routes>
       </div>
-
-      <AdminBottomNav currentPath={location.pathname} />
-    </>
+    </AdminAccessGate>
   );
 }
 
