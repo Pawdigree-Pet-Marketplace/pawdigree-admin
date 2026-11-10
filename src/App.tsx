@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import {
   BrowserRouter,
@@ -7,17 +8,17 @@ import {
   useLocation,
   useNavigate,
 } from "react-router-dom";
-import { Link } from "react-router-dom";
-import { NavLink } from "react-router-dom";
 
 import { AdminBottomNav } from "./components/admin/AdminBottomNav";
 import AdminTopbar from "./components/admin/AdminTopbar";
 import { AdminSidebar } from "./components/admin/AdminSidebar";
-import AdminManagement from "./pages/auth/AdminManagement";
-import { AdminDashboard } from "./pages/AdminDashboard";
+
 import AdminForm from "./components/AdminForm";
-import AdminLoginPage from "./pages/auth/AdminLoginPage";
 import AdminAccessGate from "./components/auth/AdminAccessGate";
+
+import AdminManagement from "./pages/auth/AdminManagement";
+import AdminLoginPage from "./pages/auth/AdminLoginPage";
+import { AdminDashboard } from "./pages/AdminDashboard";
 
 import VendorApplicationsPage from "./pages/VendorApplicationsPage";
 import { CategoriesManagement } from "./pages/CategoriesManagement";
@@ -43,8 +44,13 @@ const PAGE_INFO: Record<
     title: "Admin Dashboard",
     breadcrumb: "Admin / Dashboard",
   },
-  "/admin-form": {
+  "/adminManagement": {
     title: "Admin Management",
+    breadcrumb: "Admin / Admin Management",
+  },
+  "/admin-form": {
+    title: "Add Administrator",
+    breadcrumb: "Admin / Admin Management / Add Administrator",
   },
   "/admin/vendors": {
     title: "Vendor Applications",
@@ -67,10 +73,12 @@ function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
 
+  // Display the login page without the admin dashboard layout.
   if (location.pathname === "/login") {
     return <AdminLoginPage />;
   }
 
+  // Check whether an admin access token exists.
   const accessToken =
     localStorage.getItem("access") ||
     localStorage.getItem("accessToken");
@@ -79,6 +87,7 @@ function Layout() {
     return <Navigate to="/login" replace />;
   }
 
+  // Log out the admin and clear stored authentication data.
   function handleLogout() {
     localStorage.removeItem("access");
     localStorage.removeItem("refresh");
@@ -96,18 +105,14 @@ function Layout() {
 
   return (
     <AdminAccessGate>
-      <div
-        className={`admin-shell ${
-          sidebarCollapsed ? "sidebar-collapsed" : ""
-        }`}
-      >
+      <>
         <AdminSidebar
           isOpen={open}
           onClose={() => setOpen(false)}
           currentPath={location.pathname}
           isCollapsed={sidebarCollapsed}
           onToggleCollapse={() =>
-            setSidebarCollapsed((collapsed) => !collapsed)
+            setSidebarCollapsed((previous) => !previous)
           }
         />
 
@@ -116,50 +121,74 @@ function Layout() {
           onLogout={handleLogout}
           title={page.title}
         />
-        <NavLink to="/admin/users">
-  Admin Management
-</NavLink>
-          <Link to="/admin-form">
-  Admin Management
-</Link>
+
         <div className="admin-topbar-spacer" />
 
         <div className="admin-page-content">
           <Routes>
-            <Route path="/" element={<AdminDashboard />} />
-            <Route path="/dashboard" element={<AdminDashboard />} />
-            <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            {/* Admin Dashboard */}
+            <Route
+              path="/"
+              element={<AdminDashboard />}
+            />
 
-            <Route path="/admin-form" element={<AdminForm />} />
+            <Route
+              path="/dashboard"
+              element={<AdminDashboard />}
+            />
 
+            <Route
+              path="/admin"
+              element={<AdminDashboard />}
+            />
+
+            <Route
+              path="/admin/dashboard"
+              element={<AdminDashboard />}
+            />
+
+            {/* Admin Management */}
+            <Route
+              path="/adminManagement"
+              element={<AdminManagement />}
+            />
+
+            {/* Add Administrator Form */}
+            <Route
+              path="/admin-form"
+              element={<AdminForm />}
+            />
+
+            {/* Vendor Applications */}
             <Route
               path="/admin/vendors"
               element={<VendorApplicationsPage />}
             />
 
+            {/* Categories Management */}
             <Route
               path="/admin/listings/categories"
               element={<CategoriesManagement />}
             />
-  <Route
-  path="/admin/users"
-  element={<AdminManagement />}
-/>
+
+            {/* Listing Approval */}
             <Route
               path="/admin/listings/approval"
               element={<ListingApprovalQueue />}
             />
 
+            {/* Redirect unknown routes */}
             <Route
               path="*"
-              element={<Navigate to="/admin/dashboard" replace />}
+              element={
+                <Navigate to="/admin/dashboard" replace />
+              }
             />
           </Routes>
         </div>
 
         <AdminBottomNav currentPath={location.pathname} />
-      </div>
+      </>
     </AdminAccessGate>
   );
 }
