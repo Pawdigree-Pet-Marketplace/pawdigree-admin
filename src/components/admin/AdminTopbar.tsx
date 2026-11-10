@@ -6,7 +6,6 @@ interface Props {
   onMenuClick: () => void;
   onLogout: () => void;
   title?: string;
-  breadcrumb?: string;
   showBack?: boolean;
   onBack?: () => void;
   avatarUrl?: string;
@@ -19,7 +18,6 @@ export const AdminTopbar = ({
   onMenuClick,
   onLogout,
   title = "Dashboard Overview",
-  breadcrumb = "Admin / Dashboard",
   showBack = false,
   onBack,
   avatarUrl,
@@ -40,14 +38,11 @@ export const AdminTopbar = ({
         </button>
       )}
 
-      <div className="admin-topbar-titles">
-        <span className="crumb">{breadcrumb}</span>
-        <h1 className="page-title">{title}</h1>
-      </div>
+      <div className="admin-topbar-titles"><h1 className="page-title">{title}</h1></div>
     </div>
 
     <div className="admin-topbar-right">
-      <span className="admin-topbar-badge">Super Admin</span>
+      <span className="admin-topbar-badge"><span className="admin-topbar-status-dot" />Super Admin</span>
 
       <button
         className="admin-topbar-icon has-dot"

@@ -22,27 +22,24 @@ import AdminForm from "./components/AdminForm";
 import AdminLoginPage from "./pages/auth/AdminLoginPage";
 import AdminAccessGate from "./components/auth/AdminAccessGate";
 
-const PAGE_INFO: Record<string, { title: string; breadcrumb: string }> = {
+const PAGE_INFO: Record<string, { title: string }> = {
   "/admin/listings/categories": {
     title: "Vendor Categories",
-    breadcrumb: "Admin / Listings / Categories",
   },
   "/admin/listings/approval": {
     title: "Listing Approval Queue",
-    breadcrumb: "Admin / Listings / Approval Queue",
   },
   "/admin/vendors": {
     title: "Vendor Applications",
-    breadcrumb: "Admin / Vendors",
   },
   "/admin-form": {
     title: "Admin Management",
-    breadcrumb: "Admin / Management",
   },
 };
 
 function Layout() {
   const [open, setOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -69,23 +66,23 @@ function Layout() {
 
   const page = PAGE_INFO[location.pathname] || {
     title: "Admin Dashboard",
-    breadcrumb: "Admin / Dashboard",
   };
 
 return (
   <AdminAccessGate>
-    <>
+    <div className={`admin-shell ${sidebarCollapsed ? "sidebar-collapsed" : ""}`}>
       <AdminSidebar
         isOpen={open}
         onClose={() => setOpen(false)}
         currentPath={location.pathname}
+        isCollapsed={sidebarCollapsed}
+        onToggleCollapse={() => setSidebarCollapsed((collapsed) => !collapsed)}
       />
 
       <AdminTopbar
         onMenuClick={() => setOpen(true)}
         onLogout={handleLogout}
         title={page.title}
-        breadcrumb={page.breadcrumb}
       />
 
       <div className="admin-topbar-spacer" />
@@ -122,7 +119,7 @@ return (
       </div>
 
       <AdminBottomNav currentPath={location.pathname} />
-    </>
+    </div>
   </AdminAccessGate>
 );
 }

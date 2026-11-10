@@ -18,6 +18,9 @@ function AdminLoginPage() {
       // Save tokens for authenticated API requests.
        localStorage.setItem("access", tokens.access);
        localStorage.setItem("refresh", tokens.refresh);
+       localStorage.removeItem("accessToken");
+       localStorage.removeItem("refreshToken");
+       localStorage.removeItem("token");
 
       // Save the administrator's role.
        localStorage.setItem("role", tokens.role);

@@ -1,366 +1,178 @@
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
-  Users,
-  Store,
+  Activity,
+  ArrowRight,
+  BadgeCheck,
+  ChartNoAxesCombined,
+  Layers,
+  PawPrint,
+  RefreshCw,
   ShieldCheck,
-  Flag,
-  ShoppingBag,
-  Wallet,
+  Store,
 } from "lucide-react";
+import { adminApi, type PendingPet, type VendorApplicationApi } from "../services/adminApi";
+import { ApiError } from "../services/api";
 import "./AdminDashboard.css";
 
-//to do (this is a mock display), replace with admin api when the backend is ready
-const data = {
-  stats: [
-    {
-      label: "Total Users",
-      value: "24,318",
-      trend: "4.2%",
-      up: true,
-      icon: Users,
-    },
-    {
-      label: "Active Vendors",
-      value: "1,204",
-      trend: "2.1%",
-      up: true,
-      icon: Store,
-    },
-    {
-      label: "Pending Verifications",
-      value: "38",
-      trend: "6 new",
-      up: false,
-      icon: ShieldCheck,
-    },
-    {
-      label: "Flagged Listings",
-      value: "12",
-      trend: "3 today",
-      up: false,
-      icon: Flag,
-    },
-    {
-      label: "Today's Orders",
-      value: "286",
-      trend: "8.4%",
-      up: true,
-      icon: ShoppingBag,
-    },
-    {
-      label: "Total Revenue",
-      value: "UGX 42.6M",
-      trend: "5.7%",
-      up: true,
-      icon: Wallet,
-    },
-  ],
-  orders: [
-    { d: "Mon", v: 110 },
-    { d: "Tue", v: 62 },
-    { d: "Wed", v: 175 },
-    { d: "Thu", v: 135 },
-    { d: "Fri", v: 68 },
-    { d: "Sat", v: 195 },
-    { d: "Sun", v: 138 },
-  ],
-  revenue: [
-    { d: "Mon", v: 72 },
-    { d: "Tue", v: 32 },
-    { d: "Wed", v: 48 },
-    { d: "Thu", v: 65 },
-    { d: "Fri", v: 82 },
-    { d: "Sat", v: 38 },
-    { d: "Sun", v: 68 },
-  ],
-  flagged: [
-    { user: "Grace N.", reason: "Spam listings", severity: "High" },
-    { user: "Tom O.", reason: "Fake reviews", severity: "Med" },
-    { user: "Ivan K.", reason: "Abusive msgs", severity: "High" },
-    { user: "Ruth A.", reason: "Duplicate acct", severity: "Low" },
-  ],
-  pending: [
-    {
-      business: "Kololo Pet Clinic",
-      category: "Services",
-      submitted: "2 days ago",
-    },
-    {
-      business: "Furry Friends Shop",
-      category: "Merch",
-      submitted: "1 day ago",
-    },
-    { business: "Nakawa Kennels", category: "Pets", submitted: "3 hrs ago" },
-    {
-      business: "VetCare Bugolobi",
-      category: "Services",
-      submitted: "5 hrs ago",
-    },
-  ],
-};
+const errorMessage = (error: unknown) => error instanceof ApiError ? error.message : "Something went wrong. Please try again.";
+const petName = (pet: PendingPet) => String(pet.name || pet.pet_name || pet.title || "Unnamed pet");
+const formatDate = (value?: string) => value ? new Date(value).toLocaleDateString() : "Date not provided";
 
 export const AdminDashboard = () => {
-  const maxOrder = Math.max(...data.orders.map((o) => o.v));
-  const maxRev = Math.max(...data.revenue.map((r) => r.v));
+  const [vendors, setVendors] = useState<VendorApplicationApi[]>([]);
+  const [vendorCount, setVendorCount] = useState<number | null>(null);
+  const [pets, setPets] = useState<PendingPet[]>([]);
+  const [loadingVendors, setLoadingVendors] = useState(true);
+  const [loadingPets, setLoadingPets] = useState(true);
+  const [vendorError, setVendorError] = useState("");
+  const [petError, setPetError] = useState("");
+  const [reload, setReload] = useState(0);
 
-  // Revenue axes padding so line fits inside card
-  const W = 320;
-  const H = 180;
-  const padL = 28;
-  const padB = 24;
-  const padT = 12;
-  const padR = 4;
-  const chartW = W - padL - padR;
-  const chartH = H - padT - padB;
+  useEffect(() => {
+    let active = true;
+    setLoadingVendors(true);
+    setLoadingPets(true);
+    setVendorError("");
+    setPetError("");
 
-  const revPoints = data.revenue
-    .map((r, i) => {
-      const x = padL + (i / (data.revenue.length - 1)) * chartW;
-      const y = padT + (1 - r.v / maxRev) * chartH;
-      return `${x},${y}`;
-    })
-    .join(" ");
+    adminApi.getVendorApplications("pending", 1)
+      .then((result) => {
+        if (!active) return;
+        setVendors(result.results ?? []);
+        setVendorCount(result.count ?? result.results?.length ?? 0);
+      })
+      .catch((error: unknown) => { if (active) setVendorError(errorMessage(error)); })
+      .finally(() => { if (active) setLoadingVendors(false); });
+    adminApi.getPendingPets()
+      .then((result) => { if (active) setPets(result); })
+      .catch((error: unknown) => { if (active) setPetError(errorMessage(error)); })
+      .finally(() => { if (active) setLoadingPets(false); });
+
+    return () => { active = false; };
+  }, [reload]);
+
+  const reviewItems = useMemo(() => [
+    ...vendors.slice(0, 5).map((vendor) => ({
+      id: `vendor-${vendor.id}`,
+      name: vendor.name || "Unnamed business",
+      type: "Vendor application",
+      submitted: formatDate(vendor.created_at),
+      href: "/admin/vendors",
+      Icon: Store,
+    })),
+    ...pets.slice(0, 5).map((pet) => ({
+      id: `pet-${pet.id}`,
+      name: petName(pet),
+      type: "Pet listing",
+      submitted: formatDate(pet.created_at),
+      href: "/admin/listings/approval",
+      Icon: PawPrint,
+    })),
+  ], [vendors, pets]);
 
   return (
-    <div className="dash-page">
-      <div className="dash-stats-grid">
-        {data.stats.map((s) => {
-          const Icon = s.icon;
-          return (
-            <div key={s.label} className="dash-stat-card">
-              <div className="dash-stat-dot">
-                <Icon size={18} strokeWidth={2.2} />
-              </div>
-              <div className="dash-stat-label">{s.label}</div>
-              <div className="dash-stat-value">{s.value}</div>
-              <div className={`dash-stat-trend ${s.up ? "up" : "down"}`}>
-                {s.up ? "▲" : "▼"} {s.trend}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      <div className="dash-charts-grid">
-        {/* ORDERS - BAR WITH AXES */}
-        <div className="dash-card">
-          <div className="dash-card-title">Orders over time</div>
-          <div className="dash-chart-wrap">
-            <div className="dash-y-axis">
-              <span>{maxOrder}</span>
-              <span>{Math.round(maxOrder * 0.75)}</span>
-              <span>{Math.round(maxOrder * 0.5)}</span>
-              <span>{Math.round(maxOrder * 0.25)}</span>
-              <span>0</span>
-            </div>
-            <div className="dash-bars-axis-wrap">
-              <div className="dash-grid-lines">
-                <div className="dash-grid-line" />
-                <div className="dash-grid-line" />
-                <div className="dash-grid-line" />
-                <div className="dash-grid-line" />
-                <div className="dash-grid-line solid" />
-              </div>
-              <div className="dash-bars">
-                {data.orders.map((o, i) => (
-                  <div key={i} className="dash-bar-col">
-                    <div className="dash-bar-value">{o.v}</div>
-                    <div
-                      className={`dash-bar ${i === 1 || i === 4 ? "coral" : ""}`}
-                      style={{ height: `${(o.v / maxOrder) * 100}%` }}
-                    />
-                    <span className="dash-bar-label">{o.d}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+    <main className="dash-page">
+      <section className="dash-welcome-card">
+        <span className="dash-paw-trails" aria-hidden="true">
+          <PawPrint className="dash-paw-drift dash-paw-one" size={18} />
+          <PawPrint className="dash-paw-drift dash-paw-two" size={14} />
+        </span>
+        <div className="dash-welcome-copy">
+          <span className="dash-eyebrow">PAWDIGREE ADMIN</span>
+          <h2>Welcome back, Admin</h2>
+          <p>Here’s what needs your attention today.</p>
         </div>
-
-        {/* REVENUE - LINE WITH AXES */}
-        <div className="dash-card">
-          <div className="dash-card-title">Revenue over time</div>
-          <div className="dash-line-wrap">
-            <svg
-              viewBox={`0 0 ${W} ${H}`}
-              className="dash-svg"
-              preserveAspectRatio="xMidYMid meet"
-            >
-              <line
-                x1={padL}
-                y1={padT}
-                x2={W - padR}
-                y2={padT}
-                stroke="var(--border)"
-                strokeDasharray="4 4"
-              />
-              <line
-                x1={padL}
-                y1={padT + chartH * 0.25}
-                x2={W - padR}
-                y2={padT + chartH * 0.25}
-                stroke="var(--border)"
-                strokeDasharray="4 4"
-              />
-              <line
-                x1={padL}
-                y1={padT + chartH * 0.5}
-                x2={W - padR}
-                y2={padT + chartH * 0.5}
-                stroke="var(--border)"
-                strokeDasharray="4 4"
-              />
-              <line
-                x1={padL}
-                y1={padT + chartH * 0.75}
-                x2={W - padR}
-                y2={padT + chartH * 0.75}
-                stroke="var(--border)"
-                strokeDasharray="4 4"
-              />
-              <line
-                x1={padL}
-                y1={padT + chartH}
-                x2={W - padR}
-                y2={padT + chartH}
-                stroke="var(--charcoal)"
-                strokeWidth="1"
-                opacity={0.2}
-              />
-              <line
-                x1={padL}
-                y1={padT}
-                x2={padL}
-                y2={padT + chartH}
-                stroke="var(--charcoal)"
-                strokeWidth="1"
-                opacity={0.2}
-              />
-              <polyline
-                fill="none"
-                stroke="var(--coral)"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                points={revPoints}
-              />
-              {data.revenue.map((r, i) => {
-                const x = padL + (i / (data.revenue.length - 1)) * chartW;
-                const y = padT + (1 - r.v / maxRev) * chartH;
-                return (
-                  <circle
-                    key={i}
-                    cx={x}
-                    cy={y}
-                    r="4"
-                    fill="var(--coral)"
-                    stroke="var(--white)"
-                    strokeWidth="2"
-                  />
-                );
-              })}
-              {data.revenue.map((r, i) => {
-                const x = padL + (i / (data.revenue.length - 1)) * chartW;
-                return (
-                  <text
-                    key={i}
-                    x={x}
-                    y={H - 2}
-                    textAnchor="middle"
-                    fontSize="9.5"
-                    fill="var(--gray)"
-                    fontFamily="var(--font-body)"
-                    fontWeight="600"
-                  >
-                    {r.d}
-                  </text>
-                );
-              })}
-              <text
-                x={2}
-                y={padT + 4}
-                fontSize="9"
-                fill="var(--gray)"
-                fontFamily="var(--font-body)"
-              >
-                {maxRev}
-              </text>
-              <text
-                x={2}
-                y={padT + chartH * 0.25 + 4}
-                fontSize="9"
-                fill="var(--gray)"
-                fontFamily="var(--font-body)"
-              >
-                {Math.round(maxRev * 0.75)}
-              </text>
-              <text
-                x={2}
-                y={padT + chartH * 0.5 + 4}
-                fontSize="9"
-                fill="var(--gray)"
-                fontFamily="var(--font-body)"
-              >
-                {Math.round(maxRev * 0.5)}
-              </text>
-              <text
-                x={2}
-                y={padT + chartH + 4}
-                fontSize="9"
-                fill="var(--gray)"
-                fontFamily="var(--font-body)"
-              >
-                0
-              </text>
-            </svg>
-          </div>
+        <div className="dash-welcome-actions">
+          <button className="dash-refresh" onClick={() => setReload((value) => value + 1)}>
+            <RefreshCw size={16} /> Refresh overview
+          </button>
+          <span className="dash-welcome-icon" aria-hidden="true"><ShieldCheck size={26} /></span>
         </div>
-      </div>
+      </section>
 
-      <div className="dash-tables-grid">
-        <div className="dash-table-block">
-          <div className="dash-table-header">
-            <h4>Recent Flagged Accounts</h4>
-            <Link to="/admin/flagged">View all ›</Link>
-          </div>
-          <div className="dash-card dash-table">
-            <div className="dash-tr dash-tr-head">
-              <span>USER</span>
-              <span>REASON</span>
-              <span>SEVERITY</span>
-            </div>
-            {data.flagged.map((r, i) => (
-              <div key={i} className="dash-tr">
-                <span className="dash-cell">{r.user}</span>
-                <span className="dash-cell">{r.reason}</span>
-                <span className="dash-cell dash-sev">{r.severity}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-        <div className="dash-table-block">
-          <div className="dash-table-header">
-            <h4>Pending Vendor Approvals</h4>
-            <Link to="/admin/vendors">View all ›</Link>
-          </div>
-          <div className="dash-card dash-table">
-            <div className="dash-tr dash-tr-head dash-tr-vendor">
-              <span>BUSINESS</span>
-              <span>CATEGORY</span>
-              <span>SUBMITTED</span>
-            </div>
-            {data.pending.map((r, i) => (
-              <div key={i} className="dash-tr dash-tr-vendor">
-                <span className="dash-cell">{r.business}</span>
-                <span className="dash-cell">{r.category}</span>
-                <span className="dash-cell">{r.submitted}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+      <section className="dash-stats-grid" aria-label="Administration overview">
+        <article className="dash-stat-card">
+          <span className="dash-stat-icon"><Store size={18} /></span>
+          <strong className="dash-stat-value">{loadingVendors ? "…" : vendorError ? "—" : vendorCount ?? 0}</strong>
+          <span className="dash-stat-label">Pending vendor applications</span>
+        </article>
+        <article className="dash-stat-card">
+          <span className="dash-stat-icon dash-coral"><PawPrint size={18} /></span>
+          <strong className="dash-stat-value">{loadingPets ? "…" : petError ? "—" : pets.length}</strong>
+          <span className="dash-stat-label">Pet listings awaiting review</span>
+        </article>
+        <Link className="dash-stat-card" to="/admin/vendors">
+          <span className="dash-stat-icon dash-sand"><BadgeCheck size={18} /></span>
+          <strong className="dash-stat-action">Open queue <ArrowRight size={15} /></strong>
+          <span className="dash-stat-label">Vendor applications</span>
+        </Link>
+        <Link className="dash-stat-card" to="/admin/listings/categories">
+          <span className="dash-stat-icon dash-coral"><Layers size={18} /></span>
+          <strong className="dash-stat-action">Manage <ArrowRight size={15} /></strong>
+          <span className="dash-stat-label">Vendor categories</span>
+        </Link>
+      </section>
 
-      <div className="dash-footer">© Admin v1.2 | Last sync: 2m ago</div>
-    </div>
+      {(vendorError || petError) && (
+        <div className="dash-error-banner" role="alert">
+          {[vendorError && `Vendor applications: ${vendorError}`, petError && `Pet listings: ${petError}`].filter(Boolean).join(" ")}
+        </div>
+      )}
+
+      <section className="dash-analytics-grid" aria-label="Administration analytics">
+        <article className="dash-panel dash-chart-panel">
+          <div className="dash-panel-heading">
+            <div><span className="dash-panel-kicker"><ChartNoAxesCombined size={14} /> VENDOR REVIEW</span><h3>Application activity</h3></div>
+            <span className="dash-panel-period">Last 7 days</span>
+          </div>
+          <div className="dash-empty-panel">
+            <span className="dash-empty-icon"><ChartNoAxesCombined size={20} /></span>
+            <p>Application history will appear here when activity data is available.</p>
+          </div>
+        </article>
+
+        <article className="dash-panel dash-insights-panel">
+          <div className="dash-panel-heading">
+            <div><span className="dash-panel-kicker"><Activity size={14} /> LISTING REVIEW</span><h3>Queue activity</h3></div>
+          </div>
+          <div className="dash-empty-panel">
+            <span className="dash-empty-icon dash-empty-coral"><Activity size={20} /></span>
+            <p>Queue trends will appear here when analytics are available.</p>
+          </div>
+        </article>
+      </section>
+
+      <section className="dash-panel dash-queue-panel" aria-labelledby="dash-queue-title">
+        <div className="dash-queue-heading">
+          <div>
+            <span className="dash-panel-kicker"><BadgeCheck size={14} /> ADMIN REVIEW</span>
+            <h3 id="dash-queue-title">Items awaiting review</h3>
+            <p>Recent vendor applications and pet listings from the Pawdigree backend.</p>
+          </div>
+          <span className="dash-queue-count">{loadingVendors || loadingPets ? "…" : reviewItems.length} items</span>
+        </div>
+        <div className="dash-table-wrapper">
+          <table className="dash-review-table">
+            <thead><tr><th>ITEM</th><th>QUEUE</th><th>DATE SUBMITTED</th><th>STATUS</th><th aria-label="Open item" /></tr></thead>
+            <tbody>
+              {loadingVendors || loadingPets ? (
+                <tr><td colSpan={5} className="dash-table-state">Loading review items…</td></tr>
+              ) : reviewItems.length === 0 ? (
+                <tr><td colSpan={5} className="dash-table-state">There are no items awaiting review right now.</td></tr>
+              ) : reviewItems.map((item) => (
+                <tr key={item.id}>
+                  <td><span className="dash-review-item"><span className="dash-review-icon"><item.Icon size={16} /></span><strong>{item.name}</strong></span></td>
+                  <td>{item.type}</td>
+                  <td>{item.submitted}</td>
+                  <td><span className="dash-status">Pending</span></td>
+                  <td><Link className="dash-row-link" to={item.href} aria-label={`Open ${item.type} queue`}><ArrowRight size={16} /></Link></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
   );
 };

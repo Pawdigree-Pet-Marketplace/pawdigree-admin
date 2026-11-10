@@ -15,7 +15,7 @@
 }
 
 /* Left sidebar */
-.admin-sidebar {
+.admin-layout .admin-sidebar {
   width: 260px;
   min-width: 260px;
   min-height: 100vh;
@@ -285,7 +285,7 @@
 
 /* Responsive tablet layout */
 @media (max-width: 1000px) {
-  .admin-sidebar {
+  .admin-layout .admin-sidebar {
     width: 200px;
     min-width: 200px;
   }
@@ -313,7 +313,7 @@
     display: block;
   }
 
-  .admin-sidebar {
+  .admin-layout .admin-sidebar {
     width: 100%;
     min-width: 0;
     min-height: auto;
