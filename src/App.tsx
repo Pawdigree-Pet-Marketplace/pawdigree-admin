@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import {
   BrowserRouter,
@@ -11,15 +10,21 @@ import {
 
 import { AdminBottomNav } from "./components/admin/AdminBottomNav";
 import AdminTopbar from "./components/admin/AdminTopbar";
+import { AdminSidebar } from "./components/admin/AdminSidebar";
 
 import { AdminDashboard } from "./pages/AdminDashboard";
 import AdminForm from "./components/AdminForm";
 import AdminLoginPage from "./pages/auth/AdminLoginPage";
+import AdminAccessGate from "./components/auth/AdminAccessGate";
+
 import VendorApplicationsPage from "./pages/VendorApplicationsPage";
-import { AdminSidebar } from "./components/admin/AdminSidebar";
 import { CategoriesManagement } from "./pages/CategoriesManagement";
 import { ListingApprovalQueue } from "./pages/ListingApprovalQueue";
-const PAGE_INFO: Record<string, { title: string; breadcrumb: string }> = {
+
+const PAGE_INFO: Record<
+  string,
+  { title: string; breadcrumb?: string }
+> = {
   "/": {
     title: "Admin Dashboard",
     breadcrumb: "Admin / Dashboard",
@@ -38,7 +43,6 @@ const PAGE_INFO: Record<string, { title: string; breadcrumb: string }> = {
   },
   "/admin-form": {
     title: "Admin Management",
-    breadcrumb: "Admin / Management",
   },
   "/admin/vendors": {
     title: "Vendor Applications",
@@ -56,6 +60,8 @@ const PAGE_INFO: Record<string, { title: string; breadcrumb: string }> = {
 
 function Layout() {
   const [open, setOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -84,59 +90,67 @@ function Layout() {
 
   const page = PAGE_INFO[location.pathname] || {
     title: "Admin Dashboard",
-    breadcrumb: "Admin / Dashboard",
   };
 
   return (
-    <>
-      <AdminSidebar
-        isOpen={open}
-        onClose={() => setOpen(false)}
-        currentPath={location.pathname}
-      />
+    <AdminAccessGate>
+      <div
+        className={`admin-shell ${
+          sidebarCollapsed ? "sidebar-collapsed" : ""
+        }`}
+      >
+        <AdminSidebar
+          isOpen={open}
+          onClose={() => setOpen(false)}
+          currentPath={location.pathname}
+          isCollapsed={sidebarCollapsed}
+          onToggleCollapse={() =>
+            setSidebarCollapsed((collapsed) => !collapsed)
+          }
+        />
 
-      <AdminTopbar
-        onMenuClick={() => setOpen(true)}
-        onLogout={handleLogout}
-        title={page.title}
-        breadcrumb={page.breadcrumb}
-      />
+        <AdminTopbar
+          onMenuClick={() => setOpen(true)}
+          onLogout={handleLogout}
+          title={page.title}
+        />
 
-      <div className="admin-topbar-spacer" />
+        <div className="admin-topbar-spacer" />
 
-      <div className="admin-page-content">
-        <Routes>
-          <Route path="/" element={<AdminDashboard />} />
-          <Route path="/dashboard" element={<AdminDashboard />} />
-          <Route path="/admin" element={<AdminDashboard />} />
-          <Route path="/admin/dashboard" element={<AdminDashboard />} />
+        <div className="admin-page-content">
+          <Routes>
+            <Route path="/" element={<AdminDashboard />} />
+            <Route path="/dashboard" element={<AdminDashboard />} />
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
 
-          <Route path="/admin-form" element={<AdminForm />} />
+            <Route path="/admin-form" element={<AdminForm />} />
 
-          <Route
-            path="/admin/vendors"
-            element={<VendorApplicationsPage />}
-          />
+            <Route
+              path="/admin/vendors"
+              element={<VendorApplicationsPage />}
+            />
 
-          <Route
-            path="/admin/listings/categories"
-            element={<CategoriesManagement />}
-          />
+            <Route
+              path="/admin/listings/categories"
+              element={<CategoriesManagement />}
+            />
 
-          <Route
-            path="/admin/listings/approval"
-            element={<ListingApprovalQueue />}
-          />
+            <Route
+              path="/admin/listings/approval"
+              element={<ListingApprovalQueue />}
+            />
 
-          <Route
-            path="*"
-            element={<Navigate to="/admin/dashboard" replace />}
-          />
-        </Routes>
+            <Route
+              path="*"
+              element={<Navigate to="/admin/dashboard" replace />}
+            />
+          </Routes>
+        </div>
+
+        <AdminBottomNav currentPath={location.pathname} />
       </div>
-
-      <AdminBottomNav currentPath={location.pathname} />
-    </>
+    </AdminAccessGate>
   );
 }
 
