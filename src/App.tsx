@@ -7,11 +7,13 @@ import {
   useLocation,
   useNavigate,
 } from "react-router-dom";
+import { Link } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 
 import { AdminBottomNav } from "./components/admin/AdminBottomNav";
 import AdminTopbar from "./components/admin/AdminTopbar";
 import { AdminSidebar } from "./components/admin/AdminSidebar";
-
+import AdminManagement from "./pages/auth/AdminManagement";
 import { AdminDashboard } from "./pages/AdminDashboard";
 import AdminForm from "./components/AdminForm";
 import AdminLoginPage from "./pages/auth/AdminLoginPage";
@@ -114,7 +116,12 @@ function Layout() {
           onLogout={handleLogout}
           title={page.title}
         />
-
+        <NavLink to="/admin/users">
+  Admin Management
+</NavLink>
+          <Link to="/admin-form">
+  Admin Management
+</Link>
         <div className="admin-topbar-spacer" />
 
         <div className="admin-page-content">
@@ -135,7 +142,10 @@ function Layout() {
               path="/admin/listings/categories"
               element={<CategoriesManagement />}
             />
-
+  <Route
+  path="/admin/users"
+  element={<AdminManagement />}
+/>
             <Route
               path="/admin/listings/approval"
               element={<ListingApprovalQueue />}
