@@ -7,7 +7,6 @@ import {
   ChartNoAxesCombined,
   Layers,
   PawPrint,
-  RefreshCw,
   ShieldCheck,
   Store,
 } from "lucide-react";
@@ -30,11 +29,7 @@ export const AdminDashboard = () => {
   const [reload, setReload] = useState(0);
 
   useEffect(() => {
-    let active = true;
-    setLoadingVendors(true);
-    setLoadingPets(true);
-    setVendorError("");
-    setPetError("");
+   let active = true;
 
     adminApi.getVendorApplications("pending", 1)
       .then((result) => {
@@ -51,6 +46,15 @@ export const AdminDashboard = () => {
 
     return () => { active = false; };
   }, [reload]);
+
+  const handleRefresh = () => {
+  setLoadingVendors(true);
+  setLoadingPets(true);
+  setVendorError("");
+  setPetError("");
+
+  setReload((value) => value + 1);
+};
 
   const reviewItems = useMemo(() => [
     ...vendors.slice(0, 5).map((vendor) => ({
@@ -84,9 +88,7 @@ export const AdminDashboard = () => {
           <p>Here’s what needs your attention today.</p>
         </div>
         <div className="dash-welcome-actions">
-          <button className="dash-refresh" onClick={() => setReload((value) => value + 1)}>
-            <RefreshCw size={16} /> Refresh overview
-          </button>
+          <button className="dash-refresh" onClick={handleRefresh}></button>
           <span className="dash-welcome-icon" aria-hidden="true"><ShieldCheck size={26} /></span>
         </div>
       </section>
