@@ -1,6 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError, apiRequest, unwrapList } from "../services/api";
 import { adminLogin } from "../services/adminAuthService";
+import { adminApi } from "../services/adminApi";
+import {
+  changeAdminPassword,
+  confirmAdminPasswordReset,
+  requestAdminPasswordReset,
+  setAdminPassword,
+} from "../services/adminPasswordService";
 
 describe("apiRequest", () => {
   beforeEach(() => {
@@ -109,6 +116,65 @@ describe("apiRequest", () => {
       message: "Not allowed",
       status: 403,
     });
+  });
+
+  it("connects marketplace product moderation and adoption decisions to backend routes", async () => {
+    localStorage.setItem("access", "admin-token");
+    vi.mocked(fetch)
+      .mockResolvedValueOnce(new Response(JSON.stringify([]), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ status: "APPROVED" }), { status: 200 }));
+
+    await expect(adminApi.getMerchandise()).resolves.toEqual([]);
+    await adminApi.decideAdoptionApplication("application-id", "APPROVED", "Reviewed");
+
+    expect(String(vi.mocked(fetch).mock.calls[0][0])).toBe("http://127.0.0.1:8000/api/products/");
+    const [decisionUrl, decisionInit] = vi.mocked(fetch).mock.calls[1];
+    expect(String(decisionUrl)).toBe("http://127.0.0.1:8000/api/adoptions/applications/application-id/decision/");
+    expect(decisionInit?.method).toBe("PATCH");
+    expect(JSON.parse(String(decisionInit?.body))).toEqual({ status: "APPROVED", decision_reason: "Reviewed" });
+  });
+
+  it("uses the backend's account-scoped notification and profile routes", async () => {
+    localStorage.setItem("access", "admin-token");
+    vi.mocked(fetch).mockImplementation(async () => new Response(JSON.stringify({ unread: 0, results: [] }), { status: 200 }));
+
+    await adminApi.getMyNotifications();
+    await adminApi.getUnreadNotificationCount();
+    await adminApi.markNotificationRead(12);
+    await adminApi.markAllNotificationsRead();
+    await adminApi.getCurrentAdminUser();
+
+    expect(vi.mocked(fetch).mock.calls.map(([url]) => String(url))).toEqual([
+      "http://127.0.0.1:8000/api/notification/?page=1",
+      "http://127.0.0.1:8000/api/notification/unread-count/",
+      "http://127.0.0.1:8000/api/notification/12/read/",
+      "http://127.0.0.1:8000/api/notification/mark-all-read/",
+      "http://127.0.0.1:8000/api/auth/current-user/",
+    ]);
+  });
+
+  it("sends password management payloads to the supplied auth endpoints", async () => {
+    vi.mocked(fetch).mockImplementation(async () => new Response(JSON.stringify({ detail: "ok" }), { status: 200 }));
+
+    await setAdminPassword("invite-token", "NewPassword123!");
+    await requestAdminPasswordReset("admin@example.test");
+    await confirmAdminPasswordReset("encoded-uid", "reset-token", "NewPassword123!");
+    localStorage.setItem("access", "admin-token");
+    await changeAdminPassword("CurrentPassword123!", "NewPassword123!");
+
+    const calls = vi.mocked(fetch).mock.calls;
+    expect(calls.map(([url]) => String(url))).toEqual([
+      "http://127.0.0.1:8000/api/auth/admin/set-password/",
+      "http://127.0.0.1:8000/api/auth/password-reset/request/",
+      "http://127.0.0.1:8000/api/auth/password-reset/confirm/",
+      "http://127.0.0.1:8000/api/auth/change-password/",
+    ]);
+    expect(JSON.parse(String(calls[0][1]?.body))).toEqual({ token: "invite-token", new_password: "NewPassword123!" });
+    expect(JSON.parse(String(calls[1][1]?.body))).toEqual({ email: "admin@example.test" });
+    expect(JSON.parse(String(calls[2][1]?.body))).toEqual({ uid: "encoded-uid", token: "reset-token", new_password: "NewPassword123!" });
+    expect(JSON.parse(String(calls[3][1]?.body))).toEqual({ current_password: "CurrentPassword123!", new_password: "NewPassword123!" });
+    expect(new Headers(calls[0][1]?.headers).has("Authorization")).toBe(false);
+    expect(new Headers(calls[3][1]?.headers).get("Authorization")).toBe("Bearer admin-token");
   });
 
   it("wraps network failures and unwraps common list payloads", async () => {

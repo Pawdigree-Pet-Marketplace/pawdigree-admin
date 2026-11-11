@@ -16,10 +16,25 @@ import { AdminDashboard } from "./pages/AdminDashboard";
 import AdminForm from "./components/AdminForm";
 import AdminLoginPage from "./pages/auth/AdminLoginPage";
 import AdminAccessGate from "./components/auth/AdminAccessGate";
+import { SuperAdminRoute } from "./components/auth/SuperAdminRoute";
+import { isSuperAdmin } from "./services/adminRoles";
 
 import VendorApplicationsPage from "./pages/VendorApplicationsPage";
 import { CategoriesManagement } from "./pages/CategoriesManagement";
 import { ListingApprovalQueue } from "./pages/ListingApprovalQueue";
+import AdminManagement from "./pages/auth/AdminManagement";
+import { UnavailableAdminFeature } from "./pages/UnavailableAdminFeature";
+import { AdoptionApplicationsPage } from "./pages/AdoptionApplicationsPage";
+import { AdminNotificationsPage } from "./pages/AdminNotificationsPage";
+import { AdminProfilePage } from "./pages/AdminProfilePage";
+import { VendorDirectoryPage } from "./pages/VendorDirectoryPage";
+import { MerchandiseManagementPage } from "./pages/MerchandiseManagementPage";
+import {
+  ChangeAdminPasswordPage,
+  ForgotAdminPasswordPage,
+  ResetAdminPasswordPage,
+  SetAdminPasswordPage,
+} from "./pages/auth/AdminPasswordPages";
 
 const PAGE_INFO: Record<
   string,
@@ -44,6 +59,9 @@ const PAGE_INFO: Record<
   "/admin-form": {
     title: "Admin Management",
   },
+  "/admin/management": { title: "Admin Management" },
+  "/admin/management/new": { title: "Create Administrator" },
+  "/admin/vendors/list": { title: "Vendors" },
   "/admin/vendors": {
     title: "Vendor Applications",
     breadcrumb: "Admin / Vendors",
@@ -56,6 +74,13 @@ const PAGE_INFO: Record<
     title: "Listing Approval",
     breadcrumb: "Admin / Listings / Approval",
   },
+  "/admin/listings/pets": { title: "Pet Listings" },
+  "/admin/listings/merch": { title: "Merchandise" },
+  "/admin/listings/services": { title: "Services" },
+  "/admin/adoptions": { title: "Adoption Applications" },
+  "/admin/notifications": { title: "Notifications" },
+  "/admin/profile": { title: "My Profile" },
+  "/admin/settings/security": { title: "Security" },
 };
 
 function Layout() {
@@ -68,6 +93,10 @@ function Layout() {
   if (location.pathname === "/login") {
     return <AdminLoginPage />;
   }
+
+  if (location.pathname === "/set-password") return <SetAdminPasswordPage />;
+  if (location.pathname === "/forgot-password") return <ForgotAdminPasswordPage />;
+  if (location.pathname === "/reset-password") return <ResetAdminPasswordPage />;
 
   const accessToken =
     localStorage.getItem("access") ||
@@ -92,6 +121,23 @@ function Layout() {
     title: "Admin Dashboard",
   };
 
+  const operationalFeatures: Record<string, string> = {
+    "/admin/customers": "Customers",
+    "/admin/bookings": "Bookings",
+    "/admin/orders": "Orders",
+    "/admin/payments": "Payments & Transactions",
+    "/admin/reviews": "Reviews & Reports",
+    "/admin/support": "Customer Support",
+    "/admin/reports": "Reports & Analytics",
+    "/admin/roles": "Roles & Permissions",
+    "/admin/audit": "Audit Logs",
+    "/admin/system-settings": "System Settings",
+    "/admin/configuration": "Platform Configuration",
+  };
+  const isSuperAdminPath = [
+    "/admin/management", "/admin/management/new", "/admin-form",
+    "/admin/roles", "/admin/audit", "/admin/system-settings", "/admin/configuration",
+  ].includes(location.pathname);
   return (
     <AdminAccessGate>
       <div
@@ -113,6 +159,7 @@ function Layout() {
           onMenuClick={() => setOpen(true)}
           onLogout={handleLogout}
           title={page.title}
+          roleLabel={isSuperAdmin() ? "Super Admin" : "Admin"}
         />
 
         <div className="admin-topbar-spacer" />
@@ -124,12 +171,27 @@ function Layout() {
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
 
-            <Route path="/admin-form" element={<AdminForm />} />
+            <Route
+              path="/admin/management"
+              element={<SuperAdminRoute><AdminManagement /></SuperAdminRoute>}
+            />
+            <Route
+              path="/admin/management/new"
+              element={<SuperAdminRoute><AdminForm /></SuperAdminRoute>}
+            />
+            <Route
+              path="/admin-form"
+              element={<SuperAdminRoute><AdminForm /></SuperAdminRoute>}
+            />
 
             <Route
               path="/admin/vendors"
               element={<VendorApplicationsPage />}
             />
+            <Route path="/admin/vendors/list" element={<VendorDirectoryPage />} />
+
+            <Route path="/admin/listings/pets" element={<ListingApprovalQueue />} />
+            <Route path="/admin/listings/merch" element={<MerchandiseManagementPage />} />
 
             <Route
               path="/admin/listings/categories"
@@ -140,6 +202,21 @@ function Layout() {
               path="/admin/listings/approval"
               element={<ListingApprovalQueue />}
             />
+
+            <Route path="/admin/adoptions" element={<AdoptionApplicationsPage />} />
+            <Route path="/admin/notifications" element={<AdminNotificationsPage />} />
+            <Route path="/admin/profile" element={<AdminProfilePage />} />
+            <Route path="/admin/settings/security" element={<ChangeAdminPasswordPage />} />
+
+            {Object.entries(operationalFeatures).map(([path, title]) => (
+              <Route
+                key={path}
+                path={path}
+                element={isSuperAdminPath ? (
+                  <SuperAdminRoute><UnavailableAdminFeature title={title} /></SuperAdminRoute>
+                ) : <UnavailableAdminFeature title={title} />}
+              />
+            ))}
 
             <Route
               path="*"

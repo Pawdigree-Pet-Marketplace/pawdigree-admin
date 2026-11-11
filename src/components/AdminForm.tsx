@@ -60,7 +60,7 @@ function AdminForm() {
         password,
       });
 
-      navigate("/admin/users", {
+      navigate("/admin/management", {
         replace: true,
         state: { message: "Administrator created successfully." },
       });
@@ -188,7 +188,7 @@ function AdminForm() {
             <button
               type="button"
               className="admin-btn admin-btn-cancel"
-              onClick={() => navigate("/admin/users")}
+              onClick={() => navigate("/admin/management")}
               disabled={isLoading}
             >
               Cancel
