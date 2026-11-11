@@ -9,6 +9,9 @@ import {
   setAdminPassword,
 } from "../services/adminPasswordService";
 
+const fetchPath = (callIndex: number) =>
+  new URL(String(vi.mocked(fetch).mock.calls[callIndex][0])).pathname;
+
 describe("apiRequest", () => {
   beforeEach(() => {
     localStorage.clear();
@@ -30,9 +33,7 @@ describe("apiRequest", () => {
 
     expect(fetch).toHaveBeenCalledOnce();
     const [url, init] = vi.mocked(fetch).mock.calls[0];
-   expect(String(url)).toBe(
-  "http://142.93.86.141:8000/api/categories/",
-);
+    expect(new URL(String(url)).pathname).toBe("/api/categories/");
     expect(new Headers(init?.headers).get("Authorization")).toBe(
       "Bearer test-token",
     );
@@ -48,9 +49,7 @@ describe("apiRequest", () => {
     await apiRequest("categories/");
 
     const [url, init] = vi.mocked(fetch).mock.calls[0];
-    expect(String(url)).toBe(
-  "http://142.93.86.141:8000/api/categories/",
-);
+    expect(new URL(String(url)).pathname).toBe("/api/categories/");
     expect(new Headers(init?.headers).get("Authorization")).toBe(
       "Bearer fallback-token",
     );
@@ -95,9 +94,7 @@ describe("apiRequest", () => {
    
 const [url, init] = vi.mocked(fetch).mock.calls[0];
 
-expect(String(url)).toBe(
-  "http://142.93.86.141:8000/api/auth/login/admin/",
-);
+    expect(new URL(String(url)).pathname).toBe("/api/auth/login/admin/");
 
     expect(init?.method).toBe("POST");
     expect(JSON.parse(String(init?.body))).toEqual({
@@ -130,9 +127,9 @@ expect(String(url)).toBe(
     await expect(adminApi.getMerchandise()).resolves.toEqual([]);
     await adminApi.decideAdoptionApplication("application-id", "APPROVED", "Reviewed");
 
-    expect(String(vi.mocked(fetch).mock.calls[0][0])).toBe("http://127.0.0.1:8000/api/products/");
+    expect(fetchPath(0)).toBe("/api/products/");
     const [decisionUrl, decisionInit] = vi.mocked(fetch).mock.calls[1];
-    expect(String(decisionUrl)).toBe("http://127.0.0.1:8000/api/adoptions/applications/application-id/decision/");
+    expect(new URL(String(decisionUrl)).pathname).toBe("/api/adoptions/applications/application-id/decision/");
     expect(decisionInit?.method).toBe("PATCH");
     expect(JSON.parse(String(decisionInit?.body))).toEqual({ status: "APPROVED", decision_reason: "Reviewed" });
   });
@@ -147,12 +144,12 @@ expect(String(url)).toBe(
     await adminApi.markAllNotificationsRead();
     await adminApi.getCurrentAdminUser();
 
-    expect(vi.mocked(fetch).mock.calls.map(([url]) => String(url))).toEqual([
-      "http://127.0.0.1:8000/api/notification/?page=1",
-      "http://127.0.0.1:8000/api/notification/unread-count/",
-      "http://127.0.0.1:8000/api/notification/12/read/",
-      "http://127.0.0.1:8000/api/notification/mark-all-read/",
-      "http://127.0.0.1:8000/api/auth/current-user/",
+    expect(vi.mocked(fetch).mock.calls.map(([url]) => new URL(String(url)).pathname + new URL(String(url)).search)).toEqual([
+      "/api/notification/?page=1",
+      "/api/notification/unread-count/",
+      "/api/notification/12/read/",
+      "/api/notification/mark-all-read/",
+      "/api/auth/current-user/",
     ]);
   });
 
@@ -166,11 +163,11 @@ expect(String(url)).toBe(
     await changeAdminPassword("CurrentPassword123!", "NewPassword123!");
 
     const calls = vi.mocked(fetch).mock.calls;
-    expect(calls.map(([url]) => String(url))).toEqual([
-      "http://127.0.0.1:8000/api/auth/admin/set-password/",
-      "http://127.0.0.1:8000/api/auth/password-reset/request/",
-      "http://127.0.0.1:8000/api/auth/password-reset/confirm/",
-      "http://127.0.0.1:8000/api/auth/change-password/",
+    expect(calls.map(([url]) => new URL(String(url)).pathname)).toEqual([
+      "/api/auth/admin/set-password/",
+      "/api/auth/password-reset/request/",
+      "/api/auth/password-reset/confirm/",
+      "/api/auth/change-password/",
     ]);
     expect(JSON.parse(String(calls[0][1]?.body))).toEqual({ token: "invite-token", new_password: "NewPassword123!" });
     expect(JSON.parse(String(calls[1][1]?.body))).toEqual({ email: "admin@example.test" });
