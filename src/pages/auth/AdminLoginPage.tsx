@@ -1,14 +1,18 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import AdminLoginForm from "../../components/auth/AdminLoginForm";
 import { adminLogin } from "../../services/adminAuthService";
+import "../../components/auth/PasswordFlows.css";
 import "./AdminLoginPage.css";
 
 function AdminLoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const location = useLocation();
+  const loginMessage = (location.state as { message?: string } | null)?.message;
 
   async function handleLogin(email: string, password: string) {
     setError("");
@@ -66,6 +70,9 @@ function AdminLoginPage() {
           isLoading={isLoading}
           error={error}
         />
+
+        {loginMessage && <div className="password-flow-notice" role="status">{loginMessage}</div>}
+        <Link className="password-flow-link" to="/forgot-password">Forgot your password?</Link>
 
         <p className="admin-login-footer">
           © {new Date().getFullYear()} Pawdigree. All rights reserved.

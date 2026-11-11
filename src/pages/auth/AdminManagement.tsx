@@ -208,7 +208,7 @@ export default function AdminManagement() {
           </p>
         </div>
 
-        <Link to="/admin-form" className="admin-add-button">
+        <Link to="/admin/management/new" className="admin-add-button">
           <UserPlus size={18} />
           <span>Add Admin</span>
         </Link>
@@ -332,7 +332,7 @@ export default function AdminManagement() {
                         Try changing your search or status filter, or add a
                         new administrator.
                       </p>
-                      <Link to="/admin-form" className="admin-empty-add-link">
+                      <Link to="/admin/management/new" className="admin-empty-add-link">
                         <UserPlus size={16} />
                         Add an administrator
                       </Link>

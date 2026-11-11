@@ -6,6 +6,20 @@ export interface Category extends ApiRecord {
   description?: string;
   is_active?: boolean;
   active?: boolean;
+  kind?: "merchandise" | "services" | "pets" | "general";
+}
+
+export interface MerchandiseProduct extends ApiRecord {
+  id: number;
+  business: string | number;
+  category: number;
+  name: string;
+  description: string;
+  price: string;
+  stock_quantity: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface PendingPet extends ApiRecord {
@@ -16,6 +30,48 @@ export interface PendingPet extends ApiRecord {
   age?: string | number;
   price?: string | number;
   created_at?: string;
+}
+
+export interface AdoptionApplication extends ApiRecord {
+  application_id: string;
+  pet: number;
+  pet_name: string;
+  customer_id: number;
+  customer_username: string;
+  customer_email: string;
+  status: "PENDING" | "INFO_REQUESTED" | "APPROVED" | "REJECTED" | "CANCELLED";
+  home_type: string;
+  has_outdoor_space: boolean;
+  has_other_pets: boolean;
+  other_pets_details: string;
+  previous_pet_experience: string;
+  message: string;
+  created_at: string;
+  decided_at?: string | null;
+  decision_reason?: string;
+}
+
+export interface AdminNotification extends ApiRecord {
+  notification_id: number;
+  type: string;
+  message: string;
+  reference_id: number | null;
+  is_read: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CurrentAdminUser extends ApiRecord {
+  id: number;
+  username: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string;
+  role: string;
+  is_email_verified: boolean;
+  isActive: boolean;
+  accountStatus: string;
 }
 
 export type VendorApiStatus =
@@ -131,6 +187,22 @@ export const adminApi = {
     );
   },
 
+  async getMerchandise() {
+    return unwrapList<MerchandiseProduct>(await apiRequest<unknown>("/products/"));
+  },
+
+  createMerchandise(data: Omit<MerchandiseProduct, "id" | "created_at" | "updated_at" | "is_active"> & { is_active?: boolean }) {
+    return apiRequest<MerchandiseProduct>("/products/", { method: "POST", body: JSON.stringify(data) });
+  },
+
+  updateMerchandise(id: MerchandiseProduct["id"], data: Partial<Omit<MerchandiseProduct, "id" | "created_at" | "updated_at">>) {
+    return apiRequest<MerchandiseProduct>(`/products/${id}/`, { method: "PATCH", body: JSON.stringify(data) });
+  },
+
+  deactivateMerchandise(id: MerchandiseProduct["id"]) {
+    return apiRequest<void>(`/products/${id}/`, { method: "DELETE" });
+  },
+
   createCategory(data: { name: string; description: string }) {
     return apiRequest<Category>("/categories/", {
       method: "POST",
@@ -158,6 +230,48 @@ export const adminApi = {
     return unwrapList<PendingPet>(
       await apiRequest<unknown>("/pets/admin/pending/")
     );
+  },
+
+  async getAdoptionApplications() {
+    return unwrapList<AdoptionApplication>(
+      await apiRequest<unknown>("/adoptions/applications/vendor/")
+    );
+  },
+
+  decideAdoptionApplication(
+    applicationId: AdoptionApplication["application_id"],
+    status: "APPROVED" | "REJECTED",
+    decisionReason = "",
+  ) {
+    return apiRequest<Partial<AdoptionApplication>>(
+      `/adoptions/applications/${applicationId}/decision/`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({ status, decision_reason: decisionReason }),
+      },
+    );
+  },
+
+  async getMyNotifications(page = 1) {
+    return apiRequest<{ count: number; next: string | null; previous: string | null; results: AdminNotification[] }>(
+      `/notification/?page=${page}`,
+    );
+  },
+
+  getUnreadNotificationCount() {
+    return apiRequest<{ unread: number }>("/notification/unread-count/");
+  },
+
+  markNotificationRead(id: AdminNotification["notification_id"]) {
+    return apiRequest<AdminNotification>(`/notification/${id}/read/`, { method: "POST" });
+  },
+
+  markAllNotificationsRead() {
+    return apiRequest<{ unread: number }>("/notification/mark-all-read/", { method: "POST" });
+  },
+
+  getCurrentAdminUser() {
+    return apiRequest<CurrentAdminUser>("/auth/current-user/");
   },
 
   approvePet(id: PendingPet["id"]) {

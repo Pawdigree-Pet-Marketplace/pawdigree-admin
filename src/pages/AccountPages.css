@@ -1,0 +1,25 @@
+.admin-table-secondary { display: block; margin-top: 4px; color: #89918c; font-size: 11px; }
+.admin-row-actions { display: flex; gap: 4px; }
+.adoption-applicant-message { padding: 12px 14px; border-radius: 8px; background: #f5f8f6; color: #46534e; line-height: 1.5; }
+.admin-edit-modal form textarea { width: 100%; min-height: 100px; padding: 11px 12px; border: 1px solid #d9dfdc; border-radius: 7px; font: inherit; resize: vertical; }
+.admin-edit-modal form select, .admin-edit-modal form input[type="number"] { width: 100%; min-height: 42px; padding: 10px 12px; border: 1px solid #d9dfdc; border-radius: 7px; background: #fff; font: inherit; }
+.admin-product-number-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.admin-add-button:disabled { opacity: .5; cursor: not-allowed; }
+.admin-password-settings-card { width: min(100%, 560px); padding: 24px; border: 1px solid #e9ecea; border-radius: 12px; background: #fff; box-shadow: 0 2px 8px rgb(30 50 45 / 4%); }
+.admin-edit-modal form label span { color: #7b8580; font-weight: 400; }
+.admin-directory-footer { display: flex; align-items: center; justify-content: space-between; }
+.admin-notification-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.admin-notification-list { margin: 0; padding: 0; list-style: none; }
+.admin-notification-list li { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 22px; border-top: 1px solid #edf0ee; }
+.admin-notification-list li.is-unread { background: #f4f9f7; }
+.admin-notification-list p { margin: 6px 0; color: #46534e; }
+.admin-notification-list time, .admin-notification-type { color: #818984; font-size: 12px; }
+.admin-notification-state { display: grid; justify-items: center; gap: 10px; padding: 42px 16px; color: #77807b; }
+.admin-profile-card { display: grid; grid-template-columns: 60px 1fr; gap: 20px; padding: 26px; border: 1px solid #e9ecea; border-radius: 12px; background: #fff; }
+.admin-profile-avatar { display: grid; width: 54px; height: 54px; place-items: center; border-radius: 50%; background: #e8f3f1; color: #216c68; }
+.admin-profile-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+.admin-profile-grid div { display: grid; gap: 6px; }
+.admin-profile-grid span { color: #818984; font-size: 12px; }
+.admin-profile-grid strong { color: #2c302f; font-size: 14px; overflow-wrap: anywhere; }
+.admin-profile-note { grid-column: 2; margin: 0; color: #818984; font-size: 12px; }
+@media (max-width: 600px) { .admin-profile-card { grid-template-columns: 1fr; padding: 18px; } .admin-profile-grid { grid-template-columns: 1fr; } .admin-profile-note { grid-column: 1; } .admin-directory-footer { align-items: flex-start; flex-direction: column; gap: 12px; } .admin-product-number-fields { grid-template-columns: 1fr; } }

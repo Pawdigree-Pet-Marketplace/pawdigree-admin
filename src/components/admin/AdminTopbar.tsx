@@ -8,11 +8,8 @@ interface Props {
   title?: string;
   showBack?: boolean;
   onBack?: () => void;
-  avatarUrl?: string;
+  roleLabel?: string;
 }
-
-const DEFAULT_AVATAR =
-  "https://ui-avatars.com/api/?name=Super+Admin&background=E6F2F0&color=2A7F6F&bold=true";
 
 const AdminTopbar = ({
   onMenuClick,
@@ -20,7 +17,7 @@ const AdminTopbar = ({
   title = "Dashboard Overview",
   showBack = false,
   onBack,
-  avatarUrl,
+  roleLabel = "Admin",
 }: Props) => (
   <header className="admin-topbar">
     <div className="admin-topbar-left">
@@ -42,24 +39,13 @@ const AdminTopbar = ({
     </div>
 
     <div className="admin-topbar-right">
-      <span className="admin-topbar-badge"><span className="admin-topbar-status-dot" />Super Admin</span>
+      <span className="admin-topbar-badge"><span className="admin-topbar-status-dot" />{roleLabel}</span>
 
       <button
         className="admin-topbar-icon has-dot"
         aria-label="Notifications"
       >
         <Bell size={18} />
-      </button>
-
-      <button className="admin-topbar-profile" aria-label="Profile">
-        <img
-          src={avatarUrl || DEFAULT_AVATAR}
-          alt="Admin avatar"
-          className="admin-topbar-avatar"
-          onError={(e) => {
-            (e.target as HTMLImageElement).src = DEFAULT_AVATAR;
-          }}
-        />
       </button>
 
       <button

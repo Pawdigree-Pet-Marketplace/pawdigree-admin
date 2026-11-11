@@ -60,10 +60,10 @@ function AdminForm() {
         password,
       });
 
-     navigate("/adminManagement", {
-  replace: true,
-  state: { message: "Administrator created successfully." },
-});
+      navigate("/admin/management", {
+        replace: true,
+        state: { message: "Administrator created successfully." },
+      });
     } catch (err) {
       setError(
         err instanceof Error
@@ -81,7 +81,8 @@ function AdminForm() {
         <div className="admin-card-heading">
           <h2>Add Admin</h2>
           <p>
-            Create an administrator account. 
+            Create an administrator account. The backend assigns the ADMIN
+            role automatically.
           </p>
         </div>
 
@@ -187,7 +188,7 @@ function AdminForm() {
             <button
               type="button"
               className="admin-btn admin-btn-cancel"
-              onClick={() => navigate("/adminManagement")}
+              onClick={() => navigate("/admin/management")}
               disabled={isLoading}
             >
               Cancel
