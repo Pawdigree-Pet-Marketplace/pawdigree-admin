@@ -12,7 +12,7 @@ import {
 import { AdminBottomNav } from "./components/admin/AdminBottomNav";
 import AdminTopbar from "./components/admin/AdminTopbar";
 import { AdminSidebar } from "./components/admin/AdminSidebar";
-
+import MerchandiseManagementPage from "./pages/auth/MerchandiseManagementPage";
 import AdminForm from "./components/AdminForm";
 import AdminAccessGate from "./components/auth/AdminAccessGate";
 
@@ -56,6 +56,10 @@ const PAGE_INFO: Record<
     title: "Vendor Applications",
     breadcrumb: "Admin / Vendors",
   },
+         "/admin/listings/merch": {
+  title: "Merchandise Management",
+  breadcrumb: "Admin / Listings / Merchandise",
+},
   "/admin/listings/categories": {
     title: "Categories Management",
     breadcrumb: "Admin / Listings / Categories",
@@ -65,7 +69,7 @@ const PAGE_INFO: Record<
     breadcrumb: "Admin / Listings / Approval",
   },
 };
-
+ 
 function Layout() {
   const [open, setOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -131,7 +135,10 @@ function Layout() {
               path="/"
               element={<AdminDashboard />}
             />
-
+         <Route
+               path="/admin/listings/merch"
+               element={<MerchandiseManagementPage />}
+              />
             <Route
               path="/dashboard"
               element={<AdminDashboard />}
@@ -164,7 +171,7 @@ function Layout() {
               path="/admin/vendors"
               element={<VendorApplicationsPage />}
             />
-
+   
             {/* Categories Management */}
             <Route
               path="/admin/listings/categories"

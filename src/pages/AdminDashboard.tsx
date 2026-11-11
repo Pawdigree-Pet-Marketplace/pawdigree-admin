@@ -13,7 +13,7 @@ import {
 import { adminApi, type PendingPet, type VendorApplicationApi } from "../services/adminApi";
 import { ApiError } from "../services/api";
 import "./AdminDashboard.css";
-
+import { Package } from "lucide-react";
 const errorMessage = (error: unknown) => error instanceof ApiError ? error.message : "Something went wrong. Please try again.";
 const petName = (pet: PendingPet) => String(pet.name || pet.pet_name || pet.title || "Unnamed pet");
 const formatDate = (value?: string) => value ? new Date(value).toLocaleDateString() : "Date not provided";
@@ -109,11 +109,36 @@ export const AdminDashboard = () => {
           <strong className="dash-stat-action">Open queue <ArrowRight size={15} /></strong>
           <span className="dash-stat-label">Vendor applications</span>
         </Link>
+        <Link className="dash-stat-card" to="/admin/listings/merch">
+  <span className="dash-stat-icon dash-sand">
+    <Package size={18} />
+  </span>
+
+  <strong className="dash-stat-action">
+    Manage <ArrowRight size={15} />
+  </strong>
+
+  <span className="dash-stat-label">
+    Merchandise Management
+  </span>
+</Link>
         <Link className="dash-stat-card" to="/admin/listings/categories">
           <span className="dash-stat-icon dash-coral"><Layers size={18} /></span>
           <strong className="dash-stat-action">Manage <ArrowRight size={15} /></strong>
           <span className="dash-stat-label">Vendor categories</span>
         </Link>
+        {localStorage.getItem("role") === "SYSTEM_ADMIN" && (
+  <Link className="dash-stat-card" to="/adminManagement">
+    <span className="dash-stat-icon dash-sand">
+      <ShieldCheck size={18} />
+    </span>
+    <strong className="dash-stat-action">
+      Manage <ArrowRight size={15} />
+    </strong>
+    <span className="dash-stat-label">Administrator accounts</span>
+  </Link>
+
+)}
       </section>
 
       {(vendorError || petError) && (

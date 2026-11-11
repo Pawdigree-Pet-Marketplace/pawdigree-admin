@@ -23,9 +23,9 @@ describe("apiRequest", () => {
 
     expect(fetch).toHaveBeenCalledOnce();
     const [url, init] = vi.mocked(fetch).mock.calls[0];
-    expect(String(url)).toBe(
-      "http://127.0.0.1:8000/api/categories/",
-    );
+   expect(String(url)).toBe(
+  "http://142.93.86.141:8000/api/categories/",
+);
     expect(new Headers(init?.headers).get("Authorization")).toBe(
       "Bearer test-token",
     );
@@ -42,8 +42,8 @@ describe("apiRequest", () => {
 
     const [url, init] = vi.mocked(fetch).mock.calls[0];
     expect(String(url)).toBe(
-      "http://127.0.0.1:8000/api/categories/",
-    );
+  "http://142.93.86.141:8000/api/categories/",
+);
     expect(new Headers(init?.headers).get("Authorization")).toBe(
       "Bearer fallback-token",
     );
@@ -85,10 +85,13 @@ describe("apiRequest", () => {
       refresh: "refresh-token",
       role: "ADMIN",
     });
-    const [url, init] = vi.mocked(fetch).mock.calls[0];
-    expect(String(url)).toBe(
-      "http://127.0.0.1:8000/api/auth/login/admin/",
-    );
+   
+const [url, init] = vi.mocked(fetch).mock.calls[0];
+
+expect(String(url)).toBe(
+  "http://142.93.86.141:8000/api/auth/login/admin/",
+);
+
     expect(init?.method).toBe("POST");
     expect(JSON.parse(String(init?.body))).toEqual({
       email: "admin@example.test",

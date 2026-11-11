@@ -1,0 +1,314 @@
+
+.merchandise-page {
+  padding-bottom: 32px;
+}
+
+.merchandise-page .management-intro {
+  align-items: center;
+}
+
+.merchandise-page .management-intro h2 {
+  color: #2C302F;
+  font-family: "Fredoka", sans-serif;
+  margin: 7px 0;
+}
+
+.merchandise-page .management-intro p {
+  color: #68716F;
+  font-family: "Nunito", sans-serif;
+}
+
+.merchandise-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin: 24px 0;
+}
+
+.merchandise-stat-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 20px;
+  background: #FFFFFF;
+  border: 1px solid #E8ECE9;
+  border-radius: 12px;
+  min-width: 0;
+}
+
+.merchandise-stat-card > div:last-child {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.merchandise-stat-card span {
+  color: #68716F;
+  font-family: "Nunito", sans-serif;
+  font-size: 13px;
+}
+
+.merchandise-stat-card strong {
+  color: #2C302F;
+  font-family: "Fredoka", sans-serif;
+  font-size: 25px;
+}
+
+.merchandise-stat-icon {
+  width: 43px;
+  height: 43px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+}
+
+.merchandise-stat-icon.teal {
+  color: #216C68;
+  background: #E8F3F1;
+}
+
+.merchandise-stat-icon.green {
+  color: #24845B;
+  background: #E8F5ED;
+}
+
+.merchandise-stat-icon.coral {
+  color: #D66D54;
+  background: #FFF0EB;
+}
+
+.merchandise-stat-icon.warning {
+  color: #A76C17;
+  background: #FFF5DD;
+}
+
+.merchandise-toolbar {
+  flex-wrap: wrap;
+}
+
+.merchandise-filter {
+  min-height: 42px;
+  padding: 0 34px 0 12px;
+  border: 1px solid #DCE3DF;
+  border-radius: 8px;
+  background: #FFFFFF;
+  color: #2C302F;
+  font-family: "Nunito", sans-serif;
+  outline-color: #216C68;
+}
+
+.merchandise-table {
+  min-width: 1050px;
+}
+
+.merchandise-product-cell {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-width: 190px;
+}
+
+.merchandise-product-cell img,
+.merchandise-image-placeholder {
+  width: 43px;
+  height: 43px;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.merchandise-product-cell img {
+  object-fit: cover;
+  border: 1px solid #E8ECE9;
+}
+
+.merchandise-image-placeholder {
+  display: grid;
+  place-items: center;
+  color: #216C68;
+  background: #F0F5F2;
+}
+
+.merchandise-business-id {
+  color: #68716F;
+  font-size: 12px;
+  font-family: monospace;
+}
+
+.merchandise-stock {
+  font-weight: 800;
+  color: #216C68;
+}
+
+.merchandise-stock.warning {
+  color: #A76C17;
+}
+
+.merchandise-stock.danger {
+  color: #C64D42;
+}
+
+.merchandise-attention {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 9px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.merchandise-attention.healthy {
+  background: #E8F5ED;
+  color: #24845B;
+}
+
+.merchandise-attention.warning {
+  background: #FFF5DD;
+  color: #94610F;
+}
+
+.merchandise-attention.danger {
+  background: #FCEBE8;
+  color: #B8463B;
+}
+
+.merchandise-attention.neutral {
+  background: #EEF0EF;
+  color: #68716F;
+}
+
+.merchandise-retry {
+  margin-left: 12px;
+  border: 0;
+  background: transparent;
+  color: #216C68;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.merchandise-details-modal {
+  max-width: 560px;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.merchandise-detail-images {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  margin: 18px 0;
+}
+
+.merchandise-detail-images img {
+  width: 105px;
+  height: 95px;
+  flex-shrink: 0;
+  object-fit: cover;
+  border-radius: 9px;
+  border: 1px solid #E8ECE9;
+}
+
+.merchandise-detail-content h3 {
+  color: #216C68;
+  font-family: "Fredoka", sans-serif;
+  font-size: 22px;
+  margin-bottom: 8px;
+}
+
+.merchandise-detail-content > p {
+  color: #68716F;
+  font-family: "Nunito", sans-serif;
+  line-height: 1.6;
+}
+
+.merchandise-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 20px 0;
+}
+
+.merchandise-detail-grid > div {
+  padding: 13px;
+  background: #F7F3E8;
+  border-radius: 9px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.merchandise-detail-grid span,
+.merchandise-detail-business span {
+  color: #68716F;
+  font-size: 12px;
+  font-family: "Nunito", sans-serif;
+}
+
+.merchandise-detail-grid strong,
+.merchandise-detail-business strong {
+  color: #2C302F;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.merchandise-detail-business {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 0;
+  border-top: 1px solid #E8ECE9;
+  color: #216C68;
+}
+
+.merchandise-detail-business > div {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+@media (max-width: 1000px) {
+  .merchandise-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .merchandise-stats {
+    grid-template-columns: 1fr 1fr;
+    gap: 9px;
+  }
+
+  .merchandise-stat-card {
+    padding: 12px;
+    gap: 9px;
+  }
+
+  .merchandise-stat-icon {
+    width: 35px;
+    height: 35px;
+  }
+
+  .merchandise-stat-card strong {
+    font-size: 21px;
+  }
+
+  .merchandise-stat-card span {
+    font-size: 11px;
+  }
+
+  .merchandise-detail-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .merchandise-toolbar .management-search {
+    width: 100%;
+  }
+
+  .merchandise-filter {
+    flex: 1;
+  }
+}
