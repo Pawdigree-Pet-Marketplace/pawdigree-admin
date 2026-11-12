@@ -96,7 +96,7 @@ function Layout() {
 
   if (location.pathname === "/set-password") return <SetAdminPasswordPage />;
   if (location.pathname === "/forgot-password") return <ForgotAdminPasswordPage />;
-  if (location.pathname === "/reset-password") return <ResetAdminPasswordPage />;
+  if (location.pathname === "/reset-password" || location.pathname === "/reset-password/") return <ResetAdminPasswordPage />;
 
   const accessToken =
     localStorage.getItem("access") ||

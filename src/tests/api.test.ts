@@ -134,6 +134,37 @@ const [url, init] = vi.mocked(fetch).mock.calls[0];
     expect(JSON.parse(String(decisionInit?.body))).toEqual({ status: "APPROVED", decision_reason: "Reviewed" });
   });
 
+  it("uses category CRUD and pet moderation routes with backend payloads and identifiers", async () => {
+    localStorage.setItem("access", "admin-token");
+    vi.mocked(fetch).mockImplementation(async () => new Response(JSON.stringify({ count: 1, next: null, previous: null, results: [] }), { status: 200 }));
+
+    await adminApi.getCategories();
+    await adminApi.createCategory({ name: "Care", description: "Pet care", kind: "services" });
+    await adminApi.updateCategory(4, { kind: "pets" });
+    await adminApi.deactivateCategory(4);
+    await adminApi.activateCategory(4);
+    await adminApi.getPendingPetPage(2);
+    await adminApi.approvePet(18);
+    await adminApi.rejectPet(19, "Missing records");
+
+    const calls = vi.mocked(fetch).mock.calls;
+    expect(calls.map(([url]) => new URL(String(url)).pathname + new URL(String(url)).search)).toEqual([
+      "/api/categories/", "/api/categories/", "/api/categories/4/", "/api/categories/4/",
+      "/api/categories/4/", "/api/pets/admin/pending/?page=2", "/api/pets/admin/18/approve/",
+      "/api/pets/admin/19/reject/",
+    ]);
+    expect(calls[1][1]?.method).toBe("POST");
+    expect(JSON.parse(String(calls[1][1]?.body))).toEqual({ name: "Care", description: "Pet care", kind: "services" });
+    expect(calls[2][1]?.method).toBe("PATCH");
+    expect(JSON.parse(String(calls[2][1]?.body))).toEqual({ kind: "pets" });
+    expect(calls[3][1]?.method).toBe("DELETE");
+    expect(calls[4][1]?.method).toBe("PATCH");
+    expect(JSON.parse(String(calls[4][1]?.body))).toEqual({ is_active: true });
+    expect(calls[6][1]?.method).toBe("POST");
+    expect(calls[7][1]?.method).toBe("POST");
+    expect(JSON.parse(String(calls[7][1]?.body))).toEqual({ reason: "Missing records" });
+  });
+
   it("uses the backend's account-scoped notification and profile routes", async () => {
     localStorage.setItem("access", "admin-token");
     vi.mocked(fetch).mockImplementation(async () => new Response(JSON.stringify({ unread: 0, results: [] }), { status: 200 }));
@@ -174,6 +205,8 @@ const [url, init] = vi.mocked(fetch).mock.calls[0];
     expect(JSON.parse(String(calls[2][1]?.body))).toEqual({ uid: "encoded-uid", token: "reset-token", new_password: "NewPassword123!" });
     expect(JSON.parse(String(calls[3][1]?.body))).toEqual({ current_password: "CurrentPassword123!", new_password: "NewPassword123!" });
     expect(new Headers(calls[0][1]?.headers).has("Authorization")).toBe(false);
+    expect(new Headers(calls[1][1]?.headers).has("Authorization")).toBe(false);
+    expect(new Headers(calls[2][1]?.headers).has("Authorization")).toBe(false);
     expect(new Headers(calls[3][1]?.headers).get("Authorization")).toBe("Bearer admin-token");
   });
 

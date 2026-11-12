@@ -14,6 +14,19 @@
 .management-search { display: flex; align-items: center; gap: 9px; width: min(360px, 100%); padding: 10px 13px; border: 1px solid var(--border); border-radius: 10px; color: var(--gray); background: white; }
 .management-search input { width: 100%; border: 0; outline: 0; color: var(--ink); background: transparent; font-size: 13px; }
 .management-count { margin-left: auto; color: var(--gray); font-size: 12px; font-weight: 700; }
+.management-filter { display: flex; align-items: center; gap: 8px; color: var(--gray); font-size: 12px; font-weight: 700; }
+.management-filter select, .management-modal select { min-height: 40px; padding: 8px 12px; border: 1px solid var(--border); border-radius: 9px; color: var(--ink); background: white; font: inherit; }
+.management-success { margin: 0 0 14px; padding: 11px 14px; border: 1px solid #b8dec8; border-radius: 10px; color: #28734c; background: var(--success-tint); }
+.management-pet-details { width: min(720px, 100%); }
+.management-pet-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin: 20px 0; }
+.management-pet-grid > div { min-width: 0; padding: 11px; border-radius: 9px; background: #f7f8f7; }
+.management-pet-grid dt { margin-bottom: 4px; color: var(--gray); font-size: 11px; }
+.management-pet-grid dd { margin: 0; color: var(--ink); font-size: 13px; font-weight: 700; overflow-wrap: anywhere; }
+.management-pet-description, .management-pet-images { margin-top: 16px; color: var(--ink); font-size: 13px; }
+.management-pet-description p { color: var(--gray); white-space: pre-wrap; }
+.management-pet-images > div { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 9px; }
+.management-pet-images img { width: 100px; height: 100px; border-radius: 9px; object-fit: cover; }
+@media (max-width: 640px) { .management-pet-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .management-icon-button { display: inline-grid; place-items: center; width: 36px; height: 36px; border: 1px solid var(--border); border-radius: 9px; color: var(--gray); background: white; cursor: pointer; }
 .management-icon-button:hover { color: var(--teal); border-color: var(--teal); }
 .management-icon-button.danger:hover { color: #b7523b; border-color: #b7523b; }
