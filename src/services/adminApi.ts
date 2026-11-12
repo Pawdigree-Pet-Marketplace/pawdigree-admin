@@ -1,12 +1,13 @@
 import { apiRequest, type ApiRecord, unwrapList } from "./api";
 
+export type CategoryKind = "general" | "pets" | "merchandise" | "services";
+
 export interface Category extends ApiRecord {
   id: number | string;
   name: string;
-  description?: string;
-  is_active?: boolean;
-  active?: boolean;
-  kind?: "merchandise" | "services" | "pets" | "general";
+  description: string;
+  kind: CategoryKind;
+  is_active: boolean;
 }
 
 export interface MerchandiseProduct extends ApiRecord {
@@ -23,13 +24,34 @@ export interface MerchandiseProduct extends ApiRecord {
 }
 
 export interface PendingPet extends ApiRecord {
-  id: number | string;
-  name?: string;
-  species?: string;
-  breed?: string;
-  age?: string | number;
-  price?: string | number;
-  created_at?: string;
+  pet_id: number;
+  vendor: number;
+  business: number | string;
+  listing_type: "ADOPTION" | "SALE";
+  name: string;
+  species: string;
+  breed: string;
+  age: number;
+  gender: "MALE" | "FEMALE" | "UNKNOWN";
+  size: "SMALL" | "MEDIUM" | "LARGE";
+  description: string;
+  approved: boolean;
+  review_status: "PENDING" | "APPROVED" | "REJECTED";
+  rejection_reason: string;
+  reviewed_at: string | null;
+  is_active: boolean;
+  price: string | null;
+  adoption_status: "AVAILABLE" | "PENDING" | "ADOPTED";
+  images: Array<{ image_id: number; image: string; is_primary: boolean; position: number; created_at: string }>;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PendingPetPage {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: PendingPet[];
 }
 
 export interface AdoptionApplication extends ApiRecord {
@@ -203,7 +225,7 @@ export const adminApi = {
     return apiRequest<void>(`/products/${id}/`, { method: "DELETE" });
   },
 
-  createCategory(data: { name: string; description: string }) {
+  createCategory(data: { name: string; description: string; kind: CategoryKind }) {
     return apiRequest<Category>("/categories/", {
       method: "POST",
       body: JSON.stringify(data),
@@ -212,7 +234,7 @@ export const adminApi = {
 
   updateCategory(
     id: Category["id"],
-    data: { name: string; description: string }
+    data: Partial<Pick<Category, "name" | "description" | "kind" | "is_active">>
   ) {
     return apiRequest<Category>(`/categories/${id}/`, {
       method: "PATCH",
@@ -226,10 +248,19 @@ export const adminApi = {
     });
   },
 
+  activateCategory(id: Category["id"]) {
+    return apiRequest<Category>(`/categories/${id}/`, {
+      method: "PATCH",
+      body: JSON.stringify({ is_active: true }),
+    });
+  },
+
+  getPendingPetPage(page = 1) {
+    return apiRequest<PendingPetPage>(`/pets/admin/pending/?page=${page}`);
+  },
+
   async getPendingPets() {
-    return unwrapList<PendingPet>(
-      await apiRequest<unknown>("/pets/admin/pending/")
-    );
+    return unwrapList<PendingPet>(await apiRequest<PendingPetPage>("/pets/admin/pending/?page=1"));
   },
 
   async getAdoptionApplications() {
@@ -274,13 +305,13 @@ export const adminApi = {
     return apiRequest<CurrentAdminUser>("/auth/current-user/");
   },
 
-  approvePet(id: PendingPet["id"]) {
+  approvePet(id: PendingPet["pet_id"]) {
     return apiRequest<unknown>(`/pets/admin/${id}/approve/`, {
       method: "POST",
     });
   },
 
-  rejectPet(id: PendingPet["id"], reason: string) {
+  rejectPet(id: PendingPet["pet_id"], reason: string) {
     return apiRequest<unknown>(`/pets/admin/${id}/reject/`, {
       method: "POST",
       body: JSON.stringify({ reason }),

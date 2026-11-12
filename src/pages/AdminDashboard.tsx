@@ -66,7 +66,7 @@ export const AdminDashboard = () => {
       Icon: Store,
     })),
     ...pets.slice(0, 5).map((pet) => ({
-      id: `pet-${pet.id}`,
+      id: `pet-${pet.pet_id}`,
       name: petName(pet),
       type: "Pet listing",
       submitted: formatDate(pet.created_at),

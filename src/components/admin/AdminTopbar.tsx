@@ -1,5 +1,7 @@
-
+import { useCallback, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { ArrowLeft, Bell, Menu, LogOut } from "lucide-react";
+import { adminApi } from "../../services/adminApi";
 import "./AdminTopbar.css";
 
 interface Props {
@@ -18,7 +20,23 @@ const AdminTopbar = ({
   showBack = false,
   onBack,
   roleLabel = "Admin",
-}: Props) => (
+}: Props) => {
+  const [unread, setUnread] = useState(0);
+  const refreshUnread = useCallback(() => {
+    void adminApi.getUnreadNotificationCount().then((result) => setUnread(result.unread)).catch(() => undefined);
+  }, []);
+
+  useEffect(() => {
+    refreshUnread();
+    window.addEventListener("focus", refreshUnread);
+    window.addEventListener("admin-notifications-updated", refreshUnread);
+    return () => {
+      window.removeEventListener("focus", refreshUnread);
+      window.removeEventListener("admin-notifications-updated", refreshUnread);
+    };
+  }, [refreshUnread]);
+
+  return (
   <header className="admin-topbar">
     <div className="admin-topbar-left">
       <button
@@ -41,12 +59,9 @@ const AdminTopbar = ({
     <div className="admin-topbar-right">
       <span className="admin-topbar-badge"><span className="admin-topbar-status-dot" />{roleLabel}</span>
 
-      <button
-        className="admin-topbar-icon has-dot"
-        aria-label="Notifications"
-      >
-        <Bell size={18} />
-      </button>
+      <Link to="/admin/notifications" className="admin-topbar-icon" aria-label={unread ? `Notifications, ${unread} unread` : "Notifications"} title="Notifications">
+        <Bell size={18} />{unread > 0 && <span className="admin-notification-badge">{unread > 99 ? "99+" : unread}</span>}
+      </Link>
 
       <button
         className="admin-topbar-icon"
@@ -58,5 +73,6 @@ const AdminTopbar = ({
       </button>
     </div>
   </header>
-);
+  );
+};
 export default AdminTopbar;

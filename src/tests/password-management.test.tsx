@@ -3,6 +3,8 @@ import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
+import App from "../App";
+import { ApiError } from "../services/api";
 import {
   ChangeAdminPasswordPage,
   ForgotAdminPasswordPage,
@@ -27,6 +29,7 @@ vi.mock("../services/adminPasswordService", () => ({
 
 afterEach(() => {
   cleanup();
+  window.history.replaceState({}, "", "/");
   localStorage.clear();
   sessionStorage.clear();
 });
@@ -96,6 +99,13 @@ describe("admin password management pages", () => {
     expect(clearStoredAdminCredentials).toHaveBeenCalledOnce();
   });
 
+  it("opens the reset form from the trailing-slash email URL without authentication", () => {
+    window.history.replaceState({}, "", "/reset-password/?uid=encoded-uid&token=reset-token");
+    render(<App />);
+    expect(screen.getByRole("heading", { name: "Reset your password" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Reset password" })).toBeInTheDocument();
+  });
+
   it("does not allow submission when the reset link has no token", () => {
     renderRoute("/reset-password?uid=encoded-uid", <ResetAdminPasswordPage />);
     expect(screen.getByRole("alert")).toHaveTextContent(/incomplete or expired/i);
@@ -122,5 +132,14 @@ describe("admin password management pages", () => {
     await fillPasswordPair(user);
     await user.click(screen.getByRole("button", { name: "Reset password" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("Invalid or expired password-reset token.");
+  });
+
+  it("surfaces password-policy validation errors returned with HTTP 400", async () => {
+    vi.mocked(confirmAdminPasswordReset).mockRejectedValueOnce(new ApiError("This password is too common.", 400));
+    const user = userEvent.setup();
+    renderRoute("/reset-password?uid=encoded-uid&token=reset-token", <ResetAdminPasswordPage />);
+    await fillPasswordPair(user);
+    await user.click(screen.getByRole("button", { name: "Reset password" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("This password is too common.");
   });
 });
