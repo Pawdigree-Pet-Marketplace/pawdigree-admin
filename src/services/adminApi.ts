@@ -10,6 +10,7 @@ export interface Category extends ApiRecord {
   is_active: boolean;
 }
 
+
 export interface MerchandiseProduct extends ApiRecord {
   id: number;
   business: string | number;
@@ -19,9 +20,20 @@ export interface MerchandiseProduct extends ApiRecord {
   price: string;
   stock_quantity: number;
   is_active: boolean;
+  approved?: boolean;
+  rejection_reason?: string;
+  reviewed_at?: string | null;
   created_at: string;
   updated_at: string;
 }
+
+export interface PendingMerchandisePage {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: MerchandiseProduct[];
+}
+
 
 export interface PendingPet extends ApiRecord {
   pet_id: number;
@@ -212,14 +224,48 @@ export const adminApi = {
   async getMerchandise() {
     return unwrapList<MerchandiseProduct>(await apiRequest<unknown>("/products/"));
   },
+    getPendingMerchandisePage(page = 1) {
+  return apiRequest<PendingMerchandisePage>(
+    `/products/admin/pending/?page=${page}`
+  );
+},
+  createMerchandise(
+  data: Omit<
+    MerchandiseProduct,
+    | "id"
+    | "created_at"
+    | "updated_at"
+    | "is_active"
+    | "approved"
+    | "rejection_reason"
+    | "reviewed_at"
+  > & { is_active?: boolean }
+) {
+  return apiRequest<MerchandiseProduct>("/products/", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+},
 
-  createMerchandise(data: Omit<MerchandiseProduct, "id" | "created_at" | "updated_at" | "is_active"> & { is_active?: boolean }) {
-    return apiRequest<MerchandiseProduct>("/products/", { method: "POST", body: JSON.stringify(data) });
-  },
-
-  updateMerchandise(id: MerchandiseProduct["id"], data: Partial<Omit<MerchandiseProduct, "id" | "created_at" | "updated_at">>) {
-    return apiRequest<MerchandiseProduct>(`/products/${id}/`, { method: "PATCH", body: JSON.stringify(data) });
-  },
+  updateMerchandise(
+  id: MerchandiseProduct["id"],
+  data: Partial<
+    Omit<
+      MerchandiseProduct,
+      | "id"
+      | "created_at"
+      | "updated_at"
+      | "approved"
+      | "rejection_reason"
+      | "reviewed_at"
+    >
+  >
+) {
+  return apiRequest<MerchandiseProduct>(`/products/${id}/`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
+},
 
   deactivateMerchandise(id: MerchandiseProduct["id"]) {
     return apiRequest<void>(`/products/${id}/`, { method: "DELETE" });
@@ -304,7 +350,18 @@ export const adminApi = {
   getCurrentAdminUser() {
     return apiRequest<CurrentAdminUser>("/auth/current-user/");
   },
+  approveMerchandise(id: MerchandiseProduct["id"]) {
+  return apiRequest<unknown>(`/products/admin/${id}/approve/`, {
+    method: "POST",
+  });
+},
 
+rejectMerchandise(id: MerchandiseProduct["id"], reason: string) {
+  return apiRequest<unknown>(`/products/admin/${id}/reject/`, {
+    method: "POST",
+    body: JSON.stringify({ reason }),
+  });
+},
   approvePet(id: PendingPet["pet_id"]) {
     return apiRequest<unknown>(`/pets/admin/${id}/approve/`, {
       method: "POST",
@@ -331,7 +388,7 @@ export const adminApi = {
       `/businesses/admin/?${query.toString()}`
     );
   },
-
+    
   // Counts unique vendor accounts and all business records.
   // Uses the existing backend endpoint; no backend changes needed.
   getVendorApplicationTotals: fetchVendorApplicationTotals,
@@ -375,3 +432,4 @@ export const adminApi = {
     >(`/businesses/admin/${id}/decisions/`);
   },
 };
+
