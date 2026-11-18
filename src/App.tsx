@@ -21,7 +21,7 @@ import { isSuperAdmin } from "./services/adminRoles";
 import { PetListingsManagementPage } from "./pages/auth/PetListingsManagementPage";
 import VendorApplicationsPage from "./pages/VendorApplicationsPage";
 import { CategoriesManagement } from "./pages/CategoriesManagement";
-import { ListingApprovalQueue } from "./pages/ListingApprovalQueue";
+
 import AdminManagement from "./pages/auth/AdminManagement";
 import { UnavailableAdminFeature } from "./pages/UnavailableAdminFeature";
 import { AdoptionApplicationsPage } from "./pages/AdoptionApplicationsPage";
@@ -70,11 +70,14 @@ const PAGE_INFO: Record<
     title: "Categories Management",
     breadcrumb: "Admin / Listings / Categories",
   },
-  "/admin/listings/approval": {
-    title: "Listing Approval",
-    breadcrumb: "Admin / Listings / Approval",
-  },
-  "/admin/listings/pets": { title: "Pet Listings" },
+ "/admin/listings/approval": {
+  title: "Pet Management",
+  breadcrumb: "Admin / Marketplace / Pet Management",
+},
+"/admin/listings/pets": {
+  title: "Pet Management",
+  breadcrumb: "Admin / Marketplace / Pet Management",
+},
   "/admin/listings/merch": { title: "Merchandise" },
   "/admin/listings/services": { title: "Services" },
   "/admin/adoptions": { title: "Adoption Applications" },
@@ -201,11 +204,10 @@ function Layout() {
               element={<CategoriesManagement />}
             />
 
-            <Route
-              path="/admin/listings/approval"
-              element={<ListingApprovalQueue />}
-            />
-
+           <Route
+  path="/admin/listings/approval"
+  element={<Navigate to="/admin/listings/pets" replace />}
+/>
             <Route path="/admin/adoptions" element={<AdoptionApplicationsPage />} />
             <Route path="/admin/notifications" element={<AdminNotificationsPage />} />
             <Route path="/admin/profile" element={<AdminProfilePage />} />

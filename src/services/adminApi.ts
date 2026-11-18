@@ -64,7 +64,23 @@ export interface PendingPet extends ApiRecord {
   created_at: string;
   updated_at: string;
 }
+export interface AdminPetBusiness {
+  id: string;
+  name: string;
+}
 
+export interface AdminPetCreateInput {
+  business: string;
+  listing_type: "SALE" | "ADOPTION";
+  name: string;
+  species: string;
+  age: number;
+  gender: "MALE" | "FEMALE" | "UNKNOWN";
+  size: "SMALL" | "MEDIUM" | "LARGE";
+  breed?: string;
+  description?: string;
+  price?: number;
+}
 export interface PendingPetPage {
   count: number;
   next: string | null;
@@ -72,6 +88,7 @@ export interface PendingPetPage {
   results: PendingPet[];
   business_name?: string | null;
 }
+
 export interface AdminPetListingPage {
   count: number;
   next: string | null;
@@ -340,7 +357,18 @@ export const adminApi = {
       body: JSON.stringify({ is_active: true }),
     });
   },
+  getAdminPetBusinesses() {
+    return apiRequest<AdminPetBusiness[]>(
+      "/pets/admin/businesses/"
+    );
+  },
 
+  createAdminPet(data: FormData) {
+    return apiRequest<PendingPet>("/pets/admin/", {
+      method: "POST",
+      body: data,
+    });
+  },
   getAdminPetListings(filters: AdminPetListingFilters = {}) {
     const query = new URLSearchParams();
 
