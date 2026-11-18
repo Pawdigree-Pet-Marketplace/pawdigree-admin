@@ -214,10 +214,88 @@ async function fetchVendorApplicationTotals(): Promise<VendorApplicationTotals> 
   };
 }
 
+export type ManagedUserStatus = "active" | "deactivated" | "suspended";
+
+export interface ManagedUser extends ApiRecord {
+  id?: number | string;
+  user_id?: number | string;
+  username?: string;
+  first_name?: string;
+  last_name?: string;
+  email?: string;
+  phone?: string;
+  role?: string;
+  status?: string;
+  account_status?: string;
+  is_active?: boolean;
+  created_at?: string;
+}
+
+export interface ManagedUsersPage {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: ManagedUser[];
+}
+
 export const adminApi = {
   async getCategories() {
     return unwrapList<Category>(
       await apiRequest<unknown>("/categories/")
+    );
+    
+  },
+
+  getUsers(params: {
+    search?: string;
+    role?: string;
+    status?: ManagedUserStatus;
+    page?: number;
+    page_size?: number;
+  } = {}) {
+    const query = new URLSearchParams();
+
+    if (params.search?.trim()) {
+      query.set("search", params.search.trim());
+    }
+
+    if (params.role) {
+      query.set("role", params.role);
+    }
+
+    if (params.status) {
+      query.set("status", params.status);
+    }
+
+    query.set("page", String(params.page ?? 1));
+    query.set("page_size", String(params.page_size ?? 10));
+
+    return apiRequest<ManagedUsersPage>(
+      `/admin/users/?${query.toString()}`
+    );
+  },
+
+  activateUser(userId: number | string) {
+    return apiRequest<unknown>(
+      `/admin/users/${userId}/activate/`,
+      { method: "POST" }
+    );
+  },
+
+  deactivateUser(userId: number | string) {
+    return apiRequest<unknown>(
+      `/admin/users/${userId}/deactivate/`,
+      { method: "POST" }
+    );
+  },
+
+  suspendUser(userId: number | string, reason: string) {
+    return apiRequest<unknown>(
+      `/admin/users/${userId}/suspend/`,
+      {
+        method: "POST",
+        body: JSON.stringify({ reason }),
+      }
     );
   },
 
@@ -227,6 +305,7 @@ export const adminApi = {
     getPendingMerchandisePage(page = 1) {
   return apiRequest<PendingMerchandisePage>(
     `/products/admin/pending/?page=${page}`
+    
   );
 },
   createMerchandise(

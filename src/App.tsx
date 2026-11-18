@@ -18,7 +18,7 @@ import AdminLoginPage from "./pages/auth/AdminLoginPage";
 import AdminAccessGate from "./components/auth/AdminAccessGate";
 import { SuperAdminRoute } from "./components/auth/SuperAdminRoute";
 import { isSuperAdmin } from "./services/adminRoles";
-
+import UserManagement from "./pages/auth/UserManagement";
 import VendorApplicationsPage from "./pages/VendorApplicationsPage";
 import { CategoriesManagement } from "./pages/CategoriesManagement";
 import { ListingApprovalQueue } from "./pages/ListingApprovalQueue";
@@ -188,6 +188,14 @@ function Layout() {
               path="/admin/vendors"
               element={<VendorApplicationsPage />}
             />
+            <Route
+  path="/admin/users"
+  element={
+    <SuperAdminRoute>
+      <UserManagement />
+    </SuperAdminRoute>
+  }
+/>
             <Route path="/admin/vendors/list" element={<VendorDirectoryPage />} />
 
             <Route path="/admin/listings/pets" element={<ListingApprovalQueue />} />

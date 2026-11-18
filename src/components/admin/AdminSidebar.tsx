@@ -13,6 +13,7 @@ import "./AdminSidebar.css";
 const ADMIN_NAV = [
   { title: "OVERVIEW", items: [{ label: "Dashboard", path: "/admin/dashboard", Icon: LayoutDashboard }] },
   { title: "USER MANAGEMENT", items: [
+    
     { label: "Customers", path: "/admin/customers", Icon: Users },
     { label: "Vendors", path: "/admin/vendors/list", Icon: Store },
     { label: "Vendor Applications", path: "/admin/vendors", Icon: BadgeCheck },
@@ -64,7 +65,26 @@ export const AdminSidebar = ({ isOpen, onClose, currentPath = "/admin", isCollap
     return () => { document.body.style.overflow = previousOverflow; };
   }, [isOpen]);
 
-  const nav = isSuperAdmin() ? [...ADMIN_NAV, ...SUPER_ADMIN_NAV] : ADMIN_NAV;
+  const nav = isSuperAdmin()
+  ? [
+      ...ADMIN_NAV.map((group) =>
+        group.title === "USER MANAGEMENT"
+          ? {
+              ...group,
+              items: [
+                ...group.items,
+                {
+                  label: "All Users",
+                  path: "/admin/users",
+                  Icon: Users,
+                },
+              ],
+            }
+          : group
+      ),
+      ...SUPER_ADMIN_NAV,
+    ]
+  : ADMIN_NAV;
   const isActive = (path: string) => currentPath === path ||
     (path === "/admin/vendors" && currentPath === "/admin/vendor-applications") ||
     (path === "/admin/dashboard" && ["/", "/dashboard", "/admin"].includes(currentPath));
