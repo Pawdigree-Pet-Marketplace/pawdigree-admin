@@ -1,5 +1,4 @@
-
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import {
   Search,
   RefreshCw,
@@ -53,6 +52,11 @@ const emptyFilters: AdminPetListingFilters = {
   is_active: "",
 };
 
+const pendingFilters: AdminPetListingFilters = {
+  ...emptyFilters,
+  review_status: "PENDING",
+};
+
 const emptyForm: AdminPetListingUpdate = {
   name: "",
   species: "",
@@ -85,16 +89,11 @@ export function PetListingsManagementPage() {
   const [hasNext, setHasNext] = useState(false);
   const [hasPrevious, setHasPrevious] = useState(false);
 
-  const initialFilters: AdminPetListingFilters = {
-    ...emptyFilters,
-    review_status: "PENDING",
-  };
-
   const [filters, setFilters] =
-    useState<AdminPetListingFilters>(initialFilters);
+    useState<AdminPetListingFilters>(pendingFilters);
 
   const [appliedFilters, setAppliedFilters] =
-    useState<AdminPetListingFilters>(initialFilters);
+    useState<AdminPetListingFilters>(pendingFilters);
 
   const [activeTab, setActiveTab] =
     useState<PetManagementTab>("PENDING");
@@ -116,7 +115,7 @@ export function PetListingsManagementPage() {
   const [rejectionReason, setRejectionReason] = useState("");
   const [busyId, setBusyId] = useState<number | null>(null);
 
-  // Create pet listing state
+  // Create pet listing state.
   const [createOpen, setCreateOpen] = useState(false);
 
   const [createForm, setCreateForm] =
@@ -125,10 +124,34 @@ export function PetListingsManagementPage() {
   const [businesses, setBusinesses] = useState<AdminPetBusiness[]>([]);
   const [businessLoading, setBusinessLoading] = useState(false);
   const [createLoading, setCreateLoading] = useState(false);
- const [selectedImages, setSelectedImages] = useState<File[]>([]);
-const imagePreviews = selectedImages.map((file) =>
-  URL.createObjectURL(file)
-);
+
+  const [selectedImages, setSelectedImages] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+
+  const imagePreviewUrls = useRef<string[]>([]);
+
+  // Release image preview URLs.
+  const clearImagePreviews = () => {
+    imagePreviewUrls.current.forEach((url) => {
+      URL.revokeObjectURL(url);
+    });
+
+    imagePreviewUrls.current = [];
+    setImagePreviews([]);
+  };
+
+  // Clean up preview URLs when the page unmounts.
+  useEffect(() => {
+    return () => {
+      imagePreviewUrls.current.forEach((url) => {
+        URL.revokeObjectURL(url);
+      });
+
+      imagePreviewUrls.current = [];
+    };
+  }, []);
+
+
   // Fetch pet listings whenever filters, page or reload changes.
   useEffect(() => {
     let cancelled = false;
@@ -151,9 +174,13 @@ const imagePreviews = selectedImages.map((file) =>
         setHasPrevious(Boolean(result.previous));
         setError("");
       } catch (cause) {
-        if (!cancelled) {
-          setError(errorMessage(cause));
-        }
+        if (cancelled) return;
+
+        setError(
+          cause instanceof Error
+            ? cause.message
+            : "Failed to load pet listings."
+        );
       } finally {
         if (!cancelled) {
           setLoading(false);
@@ -167,6 +194,14 @@ const imagePreviews = selectedImages.map((file) =>
       cancelled = true;
     };
   }, [appliedFilters, page, reload]);
+
+  // Close the creation form and release its image previews.
+ 
+  const closeCreateForm = () => {
+    clearImagePreviews();
+    setSelectedImages([]);
+    setCreateOpen(false);
+  };
 
   // Open the Add New Pet form and load eligible businesses.
   const openCreateForm = async () => {
@@ -248,6 +283,9 @@ const imagePreviews = selectedImages.map((file) =>
     formData.append("gender", createForm.gender);
     formData.append("size", createForm.size);
 
+    // Newly created listings must enter the normal review process.
+    formData.append("review_status", "PENDING");
+
     if (createForm.breed?.trim()) {
       formData.append("breed", createForm.breed.trim());
     }
@@ -271,26 +309,24 @@ const imagePreviews = selectedImages.map((file) =>
     try {
       const created = await adminApi.createAdminPet(formData);
 
-      setCreateOpen(false);
+      closeCreateForm();
       setCreateForm(emptyCreateForm);
-      setSelectedImages([]);
 
-      const approvedFilters: AdminPetListingFilters = {
+      // Return to Pending Review after successful creation.
+      const pendingFilters: AdminPetListingFilters = {
         ...emptyFilters,
-        review_status: "APPROVED",
+        review_status: "PENDING",
       };
 
-      setActiveTab("APPROVED");
-      setFilters(approvedFilters);
-      setAppliedFilters(approvedFilters);
+      setActiveTab("PENDING");
+      setFilters(pendingFilters);
+      setAppliedFilters(pendingFilters);
       setPage(1);
       setLoading(true);
 
       setSuccess(
-        `${created.name} was created successfully and added to Approved listings.`
+        `${created.name} was created successfully and submitted for review.`
       );
-
-      setReload((value) => value + 1);
     } catch (cause) {
       setError(errorMessage(cause));
     } finally {
@@ -396,11 +432,11 @@ const imagePreviews = selectedImages.map((file) =>
       return;
     }
 
-    if (
-      Number(editForm.age) < 0 ||
-      !Number.isFinite(Number(editForm.age))
-    ) {
-      setError("Enter a valid age in months.");
+    // Age must be a non-negative whole number.
+    const age = Number(editForm.age);
+
+    if (!Number.isInteger(age) || age < 0) {
+      setError("Age must be a non-negative whole number of months.");
       return;
     }
 
@@ -413,7 +449,7 @@ const imagePreviews = selectedImages.map((file) =>
         selectedPet.pet_id,
         {
           ...editForm,
-          age: Number(editForm.age),
+          age,
           price,
         }
       );
@@ -898,7 +934,7 @@ const imagePreviews = selectedImages.map((file) =>
                 className="management-icon-button"
                 aria-label="Close"
                 disabled={createLoading}
-                onClick={() => setCreateOpen(false)}
+                onClick={closeCreateForm}
               >
                 <X size={19} />
               </button>
@@ -937,9 +973,8 @@ const imagePreviews = selectedImages.map((file) =>
 
               {!businessLoading && businesses.length === 0 && (
                 <p className="pet-admin-note">
-                  No eligible businesses were returned. Refresh the page or
-                  check that an approved and active Pet Sale and Adoption
-                  business exists.
+                  No eligible businesses are currently available. Add or
+                  verify a business before creating a pet listing.
                 </p>
               )}
 
@@ -1145,7 +1180,7 @@ const imagePreviews = selectedImages.map((file) =>
               )}
 
               <p className="pet-admin-note">
-                Admin-created listings are approved automatically. The first
+                All new pet listings are submitted for admin review. The first
                 uploaded photo becomes the primary image.
               </p>
 
@@ -1154,7 +1189,7 @@ const imagePreviews = selectedImages.map((file) =>
                   type="button"
                   className="management-secondary"
                   disabled={createLoading}
-                  onClick={() => setCreateOpen(false)}
+                  onClick={closeCreateForm}
                 >
                   Cancel
                 </button>
@@ -1337,6 +1372,7 @@ const imagePreviews = selectedImages.map((file) =>
                     <input
                       type="number"
                       min="0"
+                      step="1"
                       required
                       value={editForm.age ?? 0}
                       onChange={(event) =>
@@ -1405,6 +1441,7 @@ const imagePreviews = selectedImages.map((file) =>
                       <input
                         type="number"
                         min="1"
+                        step="1"
                         required
                         value={editForm.price ?? ""}
                         onChange={(event) =>
