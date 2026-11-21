@@ -11,7 +11,6 @@ import {
 import { AdminBottomNav } from "./components/admin/AdminBottomNav";
 import AdminTopbar from "./components/admin/AdminTopbar";
 import { AdminSidebar } from "./components/admin/AdminSidebar";
-
 import { AdminDashboard } from "./pages/AdminDashboard";
 import AdminForm from "./components/AdminForm";
 import AdminLoginPage from "./pages/auth/AdminLoginPage";
@@ -29,6 +28,7 @@ import { AdminNotificationsPage } from "./pages/AdminNotificationsPage";
 import { AdminProfilePage } from "./pages/AdminProfilePage";
 import { VendorDirectoryPage } from "./pages/VendorDirectoryPage";
 import { MerchandiseManagementPage } from "./pages/MerchandiseManagementPage";
+import OrdersManagementPage from "./pages/admin/OrdersManagementPage";
 import {
   ChangeAdminPasswordPage,
   ForgotAdminPasswordPage,
@@ -70,12 +70,12 @@ const PAGE_INFO: Record<
     title: "Categories Management",
     breadcrumb: "Admin / Listings / Categories",
   },
-  "/admin/listings/approval": {
-    title: "Listing Approval",
-    breadcrumb: "Admin / Listings / Approval",
-  },
   "/admin/listings/pets": { title: "Pet Listings" },
   "/admin/listings/merch": { title: "Merchandise" },
+  "/admin/orders": {
+  title: "Orders Management",
+  breadcrumb: "Admin / Orders",
+},
   "/admin/listings/services": { title: "Services" },
   "/admin/adoptions": { title: "Adoption Applications" },
   "/admin/notifications": { title: "Notifications" },
@@ -124,7 +124,7 @@ function Layout() {
   const operationalFeatures: Record<string, string> = {
     "/admin/customers": "Customers",
     "/admin/bookings": "Bookings",
-    "/admin/orders": "Orders",
+
     "/admin/payments": "Payments & Transactions",
     "/admin/reviews": "Reviews & Reports",
     "/admin/support": "Customer Support",
@@ -190,9 +190,11 @@ function Layout() {
             />
             <Route path="/admin/vendors/list" element={<VendorDirectoryPage />} />
 
-            <Route path="/admin/listings/pets" element={<ListingApprovalQueue />} />
-            <Route path="/admin/listings/merch" element={<MerchandiseManagementPage />} />
-
+                       <Route path="/admin/listings/merch" element={<MerchandiseManagementPage />} />
+<Route
+  path="/admin/orders"
+  element={<OrdersManagementPage />}
+/>
             <Route
               path="/admin/listings/categories"
               element={<CategoriesManagement />}

@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import lightLogo from "../../assets/logos/lightmode-logo.svg";
 import {
   BadgeCheck, Banknote, Bell, CalendarDays, ChartNoAxesCombined,
-  ClipboardCheck, ClipboardList, Flag, LayoutDashboard, Layers,
+ ClipboardList, Flag, LayoutDashboard, Layers,
   MessageCircle, PawPrint, Settings, Shield, ShoppingBag,
   ShoppingCart, Store, UserRound, Users, Wrench, X, PanelLeftClose,
 } from "lucide-react";
@@ -22,8 +22,7 @@ const ADMIN_NAV = [
     { label: "Merchandise", path: "/admin/listings/merch", Icon: ShoppingBag },
     { label: "Services", path: "/admin/listings/services", Icon: Wrench },
     { label: "Categories", path: "/admin/listings/categories", Icon: Layers },
-    { label: "Listing Approvals", path: "/admin/listings/approval", Icon: ClipboardCheck },
-  ] },
+] },
   { title: "MARKETPLACE OPERATIONS", items: [
     { label: "Adoption Applications", path: "/admin/adoptions", Icon: PawPrint },
     { label: "Bookings", path: "/admin/bookings", Icon: CalendarDays },
