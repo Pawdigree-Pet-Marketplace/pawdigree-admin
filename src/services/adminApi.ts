@@ -34,11 +34,11 @@ export interface PendingMerchandisePage {
   results: MerchandiseProduct[];
 }
 
-
 export interface PendingPet extends ApiRecord {
   pet_id: number;
   vendor: number;
   business: number | string;
+  business_name?: string | null;
   listing_type: "ADOPTION" | "SALE";
   name: string;
   species: string;
@@ -54,18 +54,75 @@ export interface PendingPet extends ApiRecord {
   is_active: boolean;
   price: string | null;
   adoption_status: "AVAILABLE" | "PENDING" | "ADOPTED";
-  images: Array<{ image_id: number; image: string; is_primary: boolean; position: number; created_at: string }>;
+  images: Array<{
+    image_id: number;
+    image: string;
+    is_primary: boolean;
+    position: number;
+    created_at: string;
+  }>;
   created_at: string;
   updated_at: string;
 }
+export interface AdminPetBusiness {
+  id: string;
+  name: string;
+}
 
+export interface AdminPetCreateInput {
+  business: string;
+  listing_type: "SALE" | "ADOPTION";
+  name: string;
+  species: string;
+  age: number;
+  gender: "MALE" | "FEMALE" | "UNKNOWN";
+  size: "SMALL" | "MEDIUM" | "LARGE";
+  breed?: string;
+  description?: string;
+  price?: number;
+}
 export interface PendingPetPage {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: PendingPet[];
+  business_name?: string | null;
+}
+
+export interface AdminPetListingPage {
   count: number;
   next: string | null;
   previous: string | null;
   results: PendingPet[];
 }
 
+export interface AdminPetListingFilters {
+  search?: string;
+  species?: string;
+  listing_type?: "ADOPTION" | "SALE" | "";
+  adoption_status?: "AVAILABLE" | "PENDING" | "ADOPTED" | "";
+  review_status?: "APPROVED" | "PENDING" | "REJECTED" | "";
+  is_active?: "true" | "false" | "";
+  business?: string;
+  page?: number;
+  page_size?: number;
+}
+
+export type AdminPetListingUpdate = Partial<
+  Pick<
+    PendingPet,
+    | "listing_type"
+    | "name"
+    | "species"
+    | "breed"
+    | "age"
+    | "gender"
+    | "size"
+    | "description"
+    | "price"
+    | "adoption_status"
+  >
+>;
 export interface AdoptionApplication extends ApiRecord {
   application_id: string;
   pet: number;
@@ -379,14 +436,61 @@ export const adminApi = {
       body: JSON.stringify({ is_active: true }),
     });
   },
+  getAdminPetBusinesses() {
+    return apiRequest<AdminPetBusiness[]>(
+      "/pets/admin/businesses/"
+    );
+  },
+
+  createAdminPet(data: FormData) {
+    return apiRequest<PendingPet>("/pets/admin/", {
+      method: "POST",
+      body: data,
+    });
+  },
+  getAdminPetListings(filters: AdminPetListingFilters = {}) {
+    const query = new URLSearchParams();
+
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== "") {
+        query.set(key, String(value));
+      }
+    });
+
+    return apiRequest<AdminPetListingPage>(
+      `/pets/admin/?${query.toString()}`
+    );
+  },
+
+  getAdminPetListing(id: PendingPet["pet_id"]) {
+    return apiRequest<PendingPet>(`/pets/admin/${id}/`);
+  },
+
+  updateAdminPetListing(
+    id: PendingPet["pet_id"],
+    data: AdminPetListingUpdate
+  ) {
+    return apiRequest<PendingPet>(`/pets/admin/${id}/`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    });
+  },
+
+  deactivateAdminPetListing(id: PendingPet["pet_id"]) {
+    return apiRequest<void>(`/pets/admin/${id}/`, {
+      method: "DELETE",
+    });
+  },
 
   getPendingPetPage(page = 1) {
     return apiRequest<PendingPetPage>(`/pets/admin/pending/?page=${page}`);
   },
-
+    
   async getPendingPets() {
     return unwrapList<PendingPet>(await apiRequest<PendingPetPage>("/pets/admin/pending/?page=1"));
   },
+    
+
 
   async getAdoptionApplications() {
     return unwrapList<AdoptionApplication>(
