@@ -18,6 +18,7 @@ import AdminLoginPage from "./pages/auth/AdminLoginPage";
 import AdminAccessGate from "./components/auth/AdminAccessGate";
 import { SuperAdminRoute } from "./components/auth/SuperAdminRoute";
 import { isSuperAdmin } from "./services/adminRoles";
+import UserManagement from "./pages/auth/UserManagement";
 import { PetListingsManagementPage } from "./pages/auth/PetListingsManagementPage";
 import VendorApplicationsPage from "./pages/VendorApplicationsPage";
 import { CategoriesManagement } from "./pages/CategoriesManagement";
