@@ -74,7 +74,7 @@ export const AdminSidebar = ({ isOpen, onClose, currentPath = "/admin", isCollap
               items: [
                 ...group.items,
                 {
-                  label: "All Users",
+                  label: "Users",
                   path: "/admin/users",
                   Icon: Users,
                 },
