@@ -142,7 +142,7 @@ export const AdminDashboard = () => {
           <span className="dash-stat-label">Vendor categories</span>
         </Link>
         {localStorage.getItem("role") === "SYSTEM_ADMIN" && (
-  <Link className="dash-stat-card" to="/adminManagement">
+  <Link className="dash-stat-card" to="/admin/management">
     <span className="dash-stat-icon dash-sand">
       <ShieldCheck size={18} />
     </span>
