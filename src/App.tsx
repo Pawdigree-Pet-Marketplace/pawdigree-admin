@@ -201,7 +201,7 @@ function Layout() {
     </SuperAdminRoute>
   }
 />
-            <Route path="/admin/vendors/list" element={<VendorDirectoryPage />} /
+            <Route path="/admin/vendors/list" element={<VendorDirectoryPage />} />
             <Route
   path="/admin/listings/pets"
   element={<PetListingsManagementPage />}
