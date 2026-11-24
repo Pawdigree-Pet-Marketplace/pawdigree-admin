@@ -1,0 +1,106 @@
+
+/* Service Management page */
+
+.admin-service-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 220px;
+  max-width: 340px;
+}
+
+.admin-service-info > div:last-child {
+  min-width: 0;
+}
+
+.admin-service-info strong {
+  display: block;
+  color: #2c302f;
+  font-weight: 700;
+  margin-bottom: 5px;
+}
+
+.admin-service-info p {
+  color: #737a78;
+  font-size: 12px;
+  line-height: 1.5;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.admin-service-image,
+.admin-service-image-placeholder {
+  width: 52px;
+  height: 52px;
+  flex-shrink: 0;
+  border-radius: 9px;
+  object-fit: cover;
+}
+
+.admin-service-image-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f7f3e8;
+  color: #216c68;
+}
+
+.admin-service-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.admin-service-actions .admin-row-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.admin-service-actions .admin-row-action:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.admin-edit-modal form > label {
+  display: block;
+  margin-bottom: 10px;
+  color: #2c302f;
+  font-weight: 600;
+}
+
+.admin-edit-modal form textarea {
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 8px;
+  padding: 12px;
+  border: 1px solid #d9dfdc;
+  border-radius: 8px;
+  font: inherit;
+  resize: vertical;
+}
+
+.admin-edit-modal form textarea:focus {
+  outline: 2px solid #216c68;
+  outline-offset: 1px;
+}
+
+@media (max-width: 768px) {
+  .admin-service-info {
+    min-width: 180px;
+  }
+
+  .admin-service-image,
+  .admin-service-image-placeholder {
+    width: 42px;
+    height: 42px;
+  }
+
+  .admin-service-actions {
+    gap: 3px;
+  }
+}
