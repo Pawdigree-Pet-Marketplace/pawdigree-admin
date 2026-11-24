@@ -30,6 +30,7 @@ import { AdminNotificationsPage } from "./pages/AdminNotificationsPage";
 import { AdminProfilePage } from "./pages/AdminProfilePage";
 import { VendorDirectoryPage } from "./pages/VendorDirectoryPage";
 import { MerchandiseManagementPage } from "./pages/MerchandiseManagementPage";
+import { ServiceManagementPage } from "./pages/ServiceManagementPage";
 import {
   ChangeAdminPasswordPage,
   ForgotAdminPasswordPage,
@@ -201,13 +202,15 @@ function Layout() {
   }
 />
             <Route path="/admin/vendors/list" element={<VendorDirectoryPage />} />
-
             <Route
   path="/admin/listings/pets"
   element={<PetListingsManagementPage />}
 />
             <Route path="/admin/listings/merch" element={<MerchandiseManagementPage />} />
-
+            <Route
+                  path="/admin/listings/services"
+                  element={<ServiceManagementPage />}
+            />
             <Route
               path="/admin/listings/categories"
               element={<CategoriesManagement />}
