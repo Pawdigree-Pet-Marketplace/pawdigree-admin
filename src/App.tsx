@@ -202,7 +202,8 @@ function Layout() {
   element={<PetListingsManagementPage />}
 />
             <Route path="/admin/listings/merch" element={<MerchandiseManagementPage />} />
-
+            <Route  path="/admin/orders"  element={<OrdersManagementPage />}
+/>
             <Route
               path="/admin/listings/categories"
               element={<CategoriesManagement />}
