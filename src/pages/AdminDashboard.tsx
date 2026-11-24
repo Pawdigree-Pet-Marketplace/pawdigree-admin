@@ -9,6 +9,7 @@ import {
   PawPrint,
   ShieldCheck,
   Store,
+  ShoppingCart,
 } from "lucide-react";
 import { adminApi, type PendingPet, type VendorApplicationApi } from "../services/adminApi";
 import { ApiError } from "../services/api";
@@ -70,7 +71,7 @@ export const AdminDashboard = () => {
       name: petName(pet),
       type: "Pet listing",
       submitted: formatDate(pet.created_at),
-      href: "/admin/listings/approval",
+    href: "/admin/listings/pets",
       Icon: PawPrint,
     })),
   ], [vendors, pets]);
@@ -121,6 +122,19 @@ export const AdminDashboard = () => {
   <span className="dash-stat-label">
     Merchandise Management
   </span>
+  <Link className="dash-stat-card" to="/admin/orders">
+  <span className="dash-stat-icon dash-coral">
+    <ShoppingCart size={18} />
+  </span>
+
+  <strong className="dash-stat-action">
+    Manage <ArrowRight size={15} />
+  </strong>
+
+  <span className="dash-stat-label">
+    Orders Management
+  </span>
+</Link>
 </Link>
         <Link className="dash-stat-card" to="/admin/listings/categories">
           <span className="dash-stat-icon dash-coral"><Layers size={18} /></span>

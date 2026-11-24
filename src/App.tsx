@@ -11,7 +11,6 @@ import {
 import { AdminBottomNav } from "./components/admin/AdminBottomNav";
 import AdminTopbar from "./components/admin/AdminTopbar";
 import { AdminSidebar } from "./components/admin/AdminSidebar";
-
 import { AdminDashboard } from "./pages/AdminDashboard";
 import AdminForm from "./components/AdminForm";
 import AdminLoginPage from "./pages/auth/AdminLoginPage";
@@ -81,6 +80,10 @@ const PAGE_INFO: Record<
   breadcrumb: "Admin / Marketplace / Pet Management",
 },
   "/admin/listings/merch": { title: "Merchandise" },
+  "/admin/orders": {
+  title: "Orders Management",
+  breadcrumb: "Admin / Orders",
+},
   "/admin/listings/services": { title: "Services" },
   "/admin/adoptions": { title: "Adoption Applications" },
   "/admin/notifications": { title: "Notifications" },
@@ -129,7 +132,7 @@ function Layout() {
   const operationalFeatures: Record<string, string> = {
     "/admin/customers": "Customers",
     "/admin/bookings": "Bookings",
-    "/admin/orders": "Orders",
+
     "/admin/payments": "Payments & Transactions",
     "/admin/reviews": "Reviews & Reports",
     "/admin/support": "Customer Support",
