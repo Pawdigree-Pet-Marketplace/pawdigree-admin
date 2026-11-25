@@ -322,6 +322,23 @@ export interface ManagedUsersPage {
   results: ManagedUser[];
 }
 
+export type BookingStatus =
+  | "pending"
+  | "accepted"
+  | "declined"
+  | "completed"
+  | "cancelled";
+
+export type RawBooking = Record<string, unknown>;
+
+export interface Paged<T> {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: T[];
+}
+
+
 export const adminApi = {
   async getCategories() {
     return unwrapList<Category>(
@@ -381,6 +398,32 @@ export const adminApi = {
         body: JSON.stringify({ reason }),
       }
     );
+  },
+
+    getBookings(params: {
+    page?: number;
+    page_size?: number;
+    status?: BookingStatus;
+    search?: string;
+  } = {}) {
+    const query = new URLSearchParams();
+
+    if (params.status) query.set("status", params.status);
+    if (params.search?.trim()) query.set("search", params.search.trim());
+
+    query.set("page", String(params.page ?? 1));
+    query.set("page_size", String(params.page_size ?? 20));
+
+    return apiRequest<Paged<RawBooking>>(
+      `/admin/bookings/?${query.toString()}`
+    );
+  },
+
+  updateBookingStatus(id: string, status: BookingStatus) {
+    return apiRequest<RawBooking>(`/admin/bookings/${id}/status/`, {
+      method: "PATCH",
+      body: JSON.stringify({ status }),
+    });
   },
 
   async getMerchandise() {
