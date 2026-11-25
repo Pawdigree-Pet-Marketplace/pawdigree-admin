@@ -376,8 +376,14 @@ export default function AuditLogsPage() {
                     <td>{getTarget(log)}</td>
 
                     <td className="audit-details-cell">
-                      {log.details || "—"}
-                    </td>
+  {log.details && typeof log.details === "object"
+    ? Object.entries(log.details)
+        .map(([key, value]) => `${key}: ${String(value)}`)
+        .join(", ")
+    : log.details
+      ? String(log.details)
+      : "—"}
+</td>
                   </tr>
                 ))
               )}
