@@ -21,7 +21,7 @@ import UserManagement from "./pages/auth/UserManagement";
 import { PetListingsManagementPage } from "./pages/auth/PetListingsManagementPage";
 import VendorApplicationsPage from "./pages/VendorApplicationsPage";
 import { CategoriesManagement } from "./pages/CategoriesManagement";
-
+import AuditLogsPage from "./pages/admin/AuditLogsPage";
 import AdminManagement from "./pages/auth/AdminManagement";
 import { UnavailableAdminFeature } from "./pages/UnavailableAdminFeature";
 import { AdoptionApplicationsPage } from "./pages/AdoptionApplicationsPage";
@@ -84,6 +84,10 @@ const PAGE_INFO: Record<
   title: "Orders Management",
   breadcrumb: "Admin / Orders",
 },
+"/admin/audit": {
+  title: "Audit Logs",
+  breadcrumb: "Admin / Platform Administration / Audit Logs",
+},
   "/admin/listings/services": { title: "Services" },
   "/admin/adoptions": { title: "Adoption Applications" },
   "/admin/notifications": { title: "Notifications" },
@@ -138,14 +142,14 @@ function Layout() {
     "/admin/support": "Customer Support",
     "/admin/reports": "Reports & Analytics",
     "/admin/roles": "Roles & Permissions",
-    "/admin/audit": "Audit Logs",
+   
     "/admin/system-settings": "System Settings",
     "/admin/configuration": "Platform Configuration",
   };
   const isSuperAdminPath = [
-    "/admin/management", "/admin/management/new", "/admin-form",
-    "/admin/roles", "/admin/audit", "/admin/system-settings", "/admin/configuration",
-  ].includes(location.pathname);
+  "/admin/management", "/admin/management/new", "/admin-form",
+  "/admin/roles", "/admin/system-settings", "/admin/configuration",
+].includes(location.pathname);
   return (
     <AdminAccessGate>
       <div
@@ -225,6 +229,7 @@ function Layout() {
 />
             <Route path="/admin/adoptions" element={<AdoptionApplicationsPage />} />
             <Route path="/admin/notifications" element={<AdminNotificationsPage />} />
+            <Route path="/admin/audit" element={<AuditLogsPage />} />
             <Route path="/admin/profile" element={<AdminProfilePage />} />
             <Route path="/admin/settings/security" element={<ChangeAdminPasswordPage />} />
 
