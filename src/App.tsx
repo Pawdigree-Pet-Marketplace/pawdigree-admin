@@ -22,6 +22,7 @@ import { PetListingsManagementPage } from "./pages/auth/PetListingsManagementPag
 import VendorApplicationsPage from "./pages/VendorApplicationsPage";
 import { CategoriesManagement } from "./pages/CategoriesManagement";
 import AuditLogsPage from "./pages/admin/AuditLogsPage";
+import MarketplacePerformancePage from "./pages/admin/MarketplacePerformancePage";
 import AdminManagement from "./pages/auth/AdminManagement";
 import { UnavailableAdminFeature } from "./pages/UnavailableAdminFeature";
 import { AdoptionApplicationsPage } from "./pages/AdoptionApplicationsPage";
@@ -243,6 +244,8 @@ function Layout() {
             <Route path="/admin/adoptions" element={<AdoptionApplicationsPage />} />
             <Route path="/admin/notifications" element={<AdminNotificationsPage />} />
             <Route path="/admin/audit" element={<AuditLogsPage />} />
+            <Route path="/admin/marketplace-performance"  element={<MarketplacePerformancePage />}
+/>
             <Route path="/admin/profile" element={<AdminProfilePage />} />
             <Route
               path="/admin/settings/security"
