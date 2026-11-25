@@ -34,7 +34,10 @@ const ADMIN_NAV = [
     { label: "Reviews & Reports", path: "/admin/reviews", Icon: Flag },
     { label: "Customer Support", path: "/admin/support", Icon: MessageCircle },
   ] },
-  { title: "INSIGHTS", items: [{ label: "Reports & Analytics", path: "/admin/reports", Icon: ChartNoAxesCombined }] },
+ { title: "INSIGHTS", items: [
+  { label: "Reports & Analytics", path: "/admin/reports", Icon: ChartNoAxesCombined },
+] },
+
   { title: "PERSONAL", items: [
     { label: "Notifications", path: "/admin/notifications", Icon: Bell },
     { label: "My Profile", path: "/admin/profile", Icon: UserRound },
@@ -48,10 +51,10 @@ const SUPER_ADMIN_NAV = [
     { label: "Roles & Permissions", path: "/admin/roles", Icon: Shield },
     { label: "Audit Logs", path: "/admin/audit", Icon: ClipboardList },
   ] },
-  { title: "SYSTEM", items: [
-    { label: "System Settings", path: "/admin/system-settings", Icon: Settings },
-    { label: "Platform Configuration", path: "/admin/configuration", Icon: Wrench },
-  ] },
+ { title: "SYSTEM", items: [
+  { label: "System Settings", path: "/admin/system-settings", Icon: Settings },
+  { label: "Platform Configuration", path: "/admin/configuration", Icon: Wrench },
+ ] },
 ];
 
 type NavItem = { label: string; path: string; Icon: typeof LayoutDashboard };

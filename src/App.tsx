@@ -21,8 +21,7 @@ import UserManagement from "./pages/auth/UserManagement";
 import { PetListingsManagementPage } from "./pages/auth/PetListingsManagementPage";
 import VendorApplicationsPage from "./pages/VendorApplicationsPage";
 import { CategoriesManagement } from "./pages/CategoriesManagement";
-import { BookingsManagement } from "./pages/admin/BookingsManagement";
-
+import AuditLogsPage from "./pages/admin/AuditLogsPage";
 import AdminManagement from "./pages/auth/AdminManagement";
 import { UnavailableAdminFeature } from "./pages/UnavailableAdminFeature";
 import { AdoptionApplicationsPage } from "./pages/AdoptionApplicationsPage";
@@ -79,13 +78,13 @@ const PAGE_INFO: Record<string, { title: string; breadcrumb?: string }> = {
   },
   "/admin/listings/merch": { title: "Merchandise" },
   "/admin/orders": {
-    title: "Orders Management",
-    breadcrumb: "Admin / Orders",
-  },
-  "/admin/bookings": {
-    title: "Bookings",
-    breadcrumb: "Admin / Marketplace / Bookings",
-  },
+  title: "Orders Management",
+  breadcrumb: "Admin / Orders",
+},
+"/admin/audit": {
+  title: "Audit Logs",
+  breadcrumb: "Admin / Platform Administration / Audit Logs",
+},
   "/admin/listings/services": { title: "Services" },
   "/admin/adoptions": { title: "Adoption Applications" },
   "/admin/notifications": { title: "Notifications" },
@@ -143,19 +142,14 @@ function Layout() {
     "/admin/support": "Customer Support",
     "/admin/reports": "Reports & Analytics",
     "/admin/roles": "Roles & Permissions",
-    "/admin/audit": "Audit Logs",
+   
     "/admin/system-settings": "System Settings",
     "/admin/configuration": "Platform Configuration",
   };
   const isSuperAdminPath = [
-    "/admin/management",
-    "/admin/management/new",
-    "/admin-form",
-    "/admin/roles",
-    "/admin/audit",
-    "/admin/system-settings",
-    "/admin/configuration",
-  ].includes(location.pathname);
+  "/admin/management", "/admin/management/new", "/admin-form",
+  "/admin/roles", "/admin/system-settings", "/admin/configuration",
+].includes(location.pathname);
   return (
     <AdminAccessGate>
       <div
@@ -242,19 +236,13 @@ function Layout() {
               element={<CategoriesManagement />}
             />
 
-            <Route
-              path="/admin/listings/approval"
-              element={<Navigate to="/admin/listings/pets" replace />}
-            />
-            <Route
-              path="/admin/adoptions"
-              element={<AdoptionApplicationsPage />}
-            />
-            <Route path="/admin/bookings" element={<BookingsManagement />} />
-            <Route
-              path="/admin/notifications"
-              element={<AdminNotificationsPage />}
-            />
+           <Route
+  path="/admin/listings/approval"
+  element={<Navigate to="/admin/listings/pets" replace />}
+/>
+            <Route path="/admin/adoptions" element={<AdoptionApplicationsPage />} />
+            <Route path="/admin/notifications" element={<AdminNotificationsPage />} />
+            <Route path="/admin/audit" element={<AuditLogsPage />} />
             <Route path="/admin/profile" element={<AdminProfilePage />} />
             <Route
               path="/admin/settings/security"
