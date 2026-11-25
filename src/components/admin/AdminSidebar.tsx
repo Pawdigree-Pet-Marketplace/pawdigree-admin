@@ -36,6 +36,7 @@ const ADMIN_NAV = [
   ] },
  { title: "INSIGHTS", items: [
   { label: "Reports & Analytics", path: "/admin/reports", Icon: ChartNoAxesCombined },
+   { label: "Marketplace Performance", path: "/admin/marketplace-performance", Icon: ChartNoAxesCombined },
 ] },
 
   { title: "PERSONAL", items: [
