@@ -1,0 +1,143 @@
+/* Bookings page: only what AdminManagement.css doesn't already cover. */
+
+.booking-sub {
+  margin-top: 2px;
+  color: var(--gray);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* The search box is a <form> here, so keep it a flex row like the other pages */
+form.management-search {
+  margin: 0;
+}
+
+/* Status pills */
+.booking-status {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 10px;
+  border-radius: 99px;
+  background: var(--sand);
+  color: var(--gray);
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.booking-status.is-pending {
+  background: #fff3d8;
+  color: #8a6415;
+}
+
+.booking-status.is-accepted {
+  background: #e6f0fb;
+  color: #28639b;
+}
+
+.booking-status.is-completed {
+  background: var(--success-tint);
+  color: #28734c;
+}
+
+.booking-status.is-declined {
+  background: var(--coral-light);
+  color: #a34c3b;
+}
+
+.booking-status.is-cancelled {
+  background: var(--sand);
+  color: var(--gray);
+}
+
+/* Pagination */
+.booking-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 18px;
+  color: var(--gray);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.booking-pagination .management-secondary {
+  padding: 8px 14px;
+}
+
+.booking-pagination .management-secondary:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* Details modal */
+.booking-details {
+  width: min(640px, 100%);
+  max-height: calc(100vh - 36px);
+  overflow-y: auto;
+}
+
+.booking-details-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0;
+}
+
+.booking-details-grid > div {
+  min-width: 0;
+  padding: 11px;
+  border-radius: 9px;
+  background: #f7f8f7;
+}
+
+.booking-details-grid dt {
+  margin-bottom: 4px;
+  color: var(--gray);
+  font-size: 11px;
+}
+
+.booking-details-grid dd {
+  margin: 0;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.booking-notes {
+  margin-top: 16px;
+  color: var(--ink);
+  font-size: 13px;
+}
+
+.booking-notes p {
+  margin: 6px 0 0;
+  color: var(--gray);
+  white-space: pre-wrap;
+}
+
+.booking-details .management-alert {
+  margin: 16px 0 0;
+}
+
+.booking-details .management-modal-actions {
+  flex-wrap: wrap;
+}
+
+@media (max-width: 640px) {
+  .booking-details-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 450px) {
+  .management-toolbar .management-filter {
+    flex: 1;
+  }
+
+  .management-toolbar .management-filter select {
+    flex: 1;
+  }
+}

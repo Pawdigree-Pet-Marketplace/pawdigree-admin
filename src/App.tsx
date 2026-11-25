@@ -37,10 +37,7 @@ import {
   SetAdminPasswordPage,
 } from "./pages/auth/AdminPasswordPages";
 
-const PAGE_INFO: Record<
-  string,
-  { title: string; breadcrumb?: string }
-> = {
+const PAGE_INFO: Record<string, { title: string; breadcrumb?: string }> = {
   "/": {
     title: "Admin Dashboard",
     breadcrumb: "Admin / Dashboard",
@@ -71,14 +68,14 @@ const PAGE_INFO: Record<
     title: "Categories Management",
     breadcrumb: "Admin / Listings / Categories",
   },
- "/admin/listings/approval": {
-  title: "Pet Management",
-  breadcrumb: "Admin / Marketplace / Pet Management",
-},
-"/admin/listings/pets": {
-  title: "Pet Management",
-  breadcrumb: "Admin / Marketplace / Pet Management",
-},
+  "/admin/listings/approval": {
+    title: "Pet Management",
+    breadcrumb: "Admin / Marketplace / Pet Management",
+  },
+  "/admin/listings/pets": {
+    title: "Pet Management",
+    breadcrumb: "Admin / Marketplace / Pet Management",
+  },
   "/admin/listings/merch": { title: "Merchandise" },
   "/admin/orders": {
   title: "Orders Management",
@@ -107,12 +104,16 @@ function Layout() {
   }
 
   if (location.pathname === "/set-password") return <SetAdminPasswordPage />;
-  if (location.pathname === "/forgot-password") return <ForgotAdminPasswordPage />;
-  if (location.pathname === "/reset-password" || location.pathname === "/reset-password/") return <ResetAdminPasswordPage />;
+  if (location.pathname === "/forgot-password")
+    return <ForgotAdminPasswordPage />;
+  if (
+    location.pathname === "/reset-password" ||
+    location.pathname === "/reset-password/"
+  )
+    return <ResetAdminPasswordPage />;
 
   const accessToken =
-    localStorage.getItem("access") ||
-    localStorage.getItem("accessToken");
+    localStorage.getItem("access") || localStorage.getItem("accessToken");
 
   if (!accessToken) {
     return <Navigate to="/login" replace />;
@@ -135,7 +136,6 @@ function Layout() {
 
   const operationalFeatures: Record<string, string> = {
     "/admin/customers": "Customers",
-    "/admin/bookings": "Bookings",
 
     "/admin/payments": "Payments & Transactions",
     "/admin/reviews": "Reviews & Reports",
@@ -153,9 +153,7 @@ function Layout() {
   return (
     <AdminAccessGate>
       <div
-        className={`admin-shell ${
-          sidebarCollapsed ? "sidebar-collapsed" : ""
-        }`}
+        className={`admin-shell ${sidebarCollapsed ? "sidebar-collapsed" : ""}`}
       >
         <AdminSidebar
           isOpen={open}
@@ -185,38 +183,53 @@ function Layout() {
 
             <Route
               path="/admin/management"
-              element={<SuperAdminRoute><AdminManagement /></SuperAdminRoute>}
+              element={
+                <SuperAdminRoute>
+                  <AdminManagement />
+                </SuperAdminRoute>
+              }
             />
             <Route
               path="/admin/management/new"
-              element={<SuperAdminRoute><AdminForm /></SuperAdminRoute>}
+              element={
+                <SuperAdminRoute>
+                  <AdminForm />
+                </SuperAdminRoute>
+              }
             />
             <Route
               path="/admin-form"
-              element={<SuperAdminRoute><AdminForm /></SuperAdminRoute>}
+              element={
+                <SuperAdminRoute>
+                  <AdminForm />
+                </SuperAdminRoute>
+              }
             />
 
+            <Route path="/admin/vendors" element={<VendorApplicationsPage />} />
             <Route
-              path="/admin/vendors"
-              element={<VendorApplicationsPage />}
+              path="/admin/users"
+              element={
+                <SuperAdminRoute>
+                  <UserManagement />
+                </SuperAdminRoute>
+              }
             />
             <Route
-  path="/admin/users"
-  element={
-    <SuperAdminRoute>
-      <UserManagement />
-    </SuperAdminRoute>
-  }
-/>
-            <Route path="/admin/vendors/list" element={<VendorDirectoryPage />} />
+              path="/admin/vendors/list"
+              element={<VendorDirectoryPage />}
+            />
             <Route
-  path="/admin/listings/pets"
-  element={<PetListingsManagementPage />}
-/>
-            <Route path="/admin/listings/merch" element={<MerchandiseManagementPage />} />
+              path="/admin/listings/pets"
+              element={<PetListingsManagementPage />}
+            />
             <Route
-                  path="/admin/listings/services"
-                  element={<ServiceManagementPage />}
+              path="/admin/listings/merch"
+              element={<MerchandiseManagementPage />}
+            />
+            <Route
+              path="/admin/listings/services"
+              element={<ServiceManagementPage />}
             />
             <Route
               path="/admin/listings/categories"
@@ -231,15 +244,24 @@ function Layout() {
             <Route path="/admin/notifications" element={<AdminNotificationsPage />} />
             <Route path="/admin/audit" element={<AuditLogsPage />} />
             <Route path="/admin/profile" element={<AdminProfilePage />} />
-            <Route path="/admin/settings/security" element={<ChangeAdminPasswordPage />} />
+            <Route
+              path="/admin/settings/security"
+              element={<ChangeAdminPasswordPage />}
+            />
 
             {Object.entries(operationalFeatures).map(([path, title]) => (
               <Route
                 key={path}
                 path={path}
-                element={isSuperAdminPath ? (
-                  <SuperAdminRoute><UnavailableAdminFeature title={title} /></SuperAdminRoute>
-                ) : <UnavailableAdminFeature title={title} />}
+                element={
+                  isSuperAdminPath ? (
+                    <SuperAdminRoute>
+                      <UnavailableAdminFeature title={title} />
+                    </SuperAdminRoute>
+                  ) : (
+                    <UnavailableAdminFeature title={title} />
+                  )
+                }
               />
             ))}
 
