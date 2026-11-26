@@ -23,6 +23,8 @@ import VendorApplicationsPage from "./pages/VendorApplicationsPage";
 import { CategoriesManagement } from "./pages/CategoriesManagement";
 import AuditLogsPage from "./pages/admin/AuditLogsPage";
 import MarketplacePerformancePage from "./pages/admin/MarketplacePerformancePage";
+import ReportsPage from "./pages/admin/ReportsPage";
+
 import AdminManagement from "./pages/auth/AdminManagement";
 import { UnavailableAdminFeature } from "./pages/UnavailableAdminFeature";
 import { AdoptionApplicationsPage } from "./pages/AdoptionApplicationsPage";
@@ -136,17 +138,16 @@ function Layout() {
   };
 
   const operationalFeatures: Record<string, string> = {
-    "/admin/customers": "Customers",
+  "/admin/customers": "Customers",
 
-    "/admin/payments": "Payments & Transactions",
-    "/admin/reviews": "Reviews & Reports",
-    "/admin/support": "Customer Support",
-    "/admin/reports": "Reports & Analytics",
-    "/admin/roles": "Roles & Permissions",
-   
-    "/admin/system-settings": "System Settings",
-    "/admin/configuration": "Platform Configuration",
-  };
+  "/admin/payments": "Payments & Transactions",
+  "/admin/reviews": "Reviews & Reports",
+  "/admin/support": "Customer Support",
+  "/admin/roles": "Roles & Permissions",
+
+  "/admin/system-settings": "System Settings",
+  "/admin/configuration": "Platform Configuration",
+};
   const isSuperAdminPath = [
   "/admin/management", "/admin/management/new", "/admin-form",
   "/admin/roles", "/admin/system-settings", "/admin/configuration",
@@ -245,7 +246,7 @@ function Layout() {
             <Route path="/admin/notifications" element={<AdminNotificationsPage />} />
             <Route path="/admin/audit" element={<AuditLogsPage />} />
             <Route path="/admin/marketplace-performance"  element={<MarketplacePerformancePage />}
-/>
+/>          <Route path="/admin/reports" element={<ReportsPage />} />
             <Route path="/admin/profile" element={<AdminProfilePage />} />
             <Route
               path="/admin/settings/security"
