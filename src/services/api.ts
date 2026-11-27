@@ -142,3 +142,53 @@ export function unwrapList<T>(payload: unknown): T[] {
   }
   return [];
 }
+export async function apiDownload(
+  path: string,
+  fallbackFilename: string,
+): Promise<void> {
+  let token = getAccessToken();
+
+  if (!token) token = await refreshAccessToken() ?? "";
+
+  let response = await fetchApiResponse(path, { method: "GET" }, token);
+
+  // If the access token expires, refresh and retry once.
+  if (response.status === 401 && token) {
+    const refreshedToken = await refreshAccessToken();
+
+    if (refreshedToken && refreshedToken !== token) {
+      token = refreshedToken;
+      response = await fetchApiResponse(path, { method: "GET" }, token);
+    }
+  }
+
+  if (!response.ok) await throwApiError(response);
+
+  const blob = await response.blob();
+
+  // Use the filename supplied by the backend when available.
+  const contentDisposition = response.headers.get("Content-Disposition");
+  let filename = fallbackFilename;
+
+  if (contentDisposition) {
+    const utf8Match = contentDisposition.match(/filename\*=UTF-8''([^;]+)/i);
+    const regularMatch = contentDisposition.match(/filename="?([^";]+)"?/i);
+
+    if (utf8Match?.[1]) {
+      filename = decodeURIComponent(utf8Match[1]);
+    } else if (regularMatch?.[1]) {
+      filename = regularMatch[1];
+    }
+  }
+
+  const downloadUrl = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+
+  link.href = downloadUrl;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+
+  window.setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
+}
