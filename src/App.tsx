@@ -16,6 +16,7 @@ import AdminForm from "./components/AdminForm";
 import AdminLoginPage from "./pages/auth/AdminLoginPage";
 import AdminAccessGate from "./components/auth/AdminAccessGate";
 import { SuperAdminRoute } from "./components/auth/SuperAdminRoute";
+import { BookingsManagement } from "./pages/admin/BookingsManagement";
 import { isSuperAdmin } from "./services/adminRoles";
 import UserManagement from "./pages/auth/UserManagement";
 import { PetListingsManagementPage } from "./pages/auth/PetListingsManagementPage";
@@ -244,8 +245,8 @@ function Layout() {
 />
             <Route path="/admin/adoptions" element={<AdoptionApplicationsPage />} />
             <Route path="/admin/notifications" element={<AdminNotificationsPage />} />
-            <Route path="/admin/orders" element={<OrdersManagementPage />}
-/>
+            <Route path="/admin/orders" element={<OrdersManagementPage />}/> 
+                     <Route path="/admin/bookings" element={<BookingsManagement />} />
             <Route path="/admin/audit" element={<AuditLogsPage />} />
             <Route path="/admin/marketplace-performance"  element={<MarketplacePerformancePage />}
 />          <Route path="/admin/reports" element={<ReportsPage />} />
