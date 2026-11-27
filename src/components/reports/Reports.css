@@ -481,3 +481,49 @@
     padding: 14px;
   }
 }
+.reports-export-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin: 16px 0;
+  flex-wrap: wrap;
+}
+
+.reports-export-button {
+  border: none;
+  border-radius: 8px;
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.reports-export-button:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
+.reports-export-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.reports-export-excel {
+  background: #216c68;
+  color: #fff;
+}
+
+.reports-export-pdf {
+  background: #fb8665;
+  color: #fff;
+}
+
+.reports-export-error {
+  color: #b42318;
+  background: #fef3f2;
+  border: 1px solid #fecdca;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 12px 0;
+  font-size: 14px;
+}

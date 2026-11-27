@@ -1,5 +1,4 @@
-
-import { apiRequest } from "./api";
+import { apiRequest, apiDownload } from "./api";
 
 export type ReportType =
   | "overview"
@@ -83,6 +82,29 @@ export const reportsApi = {
 
     return apiRequest<ReportResponse>(
       `${endpoint}${queryString ? `?${queryString}` : ""}`,
+    );
+  },
+    exportReport(
+    reportType: ReportType,
+    format: "xlsx" | "pdf",
+    filters: ReportFilters = {},
+  ): Promise<void> {
+    const query = new URLSearchParams();
+
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== "") {
+        query.set(key, String(value));
+      }
+    });
+
+    query.set("export", format);
+
+    const endpoint = REPORT_ENDPOINTS[reportType];
+    const filename = `${reportType}-report.${format}`;
+
+    return apiDownload(
+      `${endpoint}?${query.toString()}`,
+      filename,
     );
   },
 };

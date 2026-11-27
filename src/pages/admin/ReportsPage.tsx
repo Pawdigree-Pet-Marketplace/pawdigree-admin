@@ -112,6 +112,8 @@ const ReportsPage = () => {
   const [error, setError] = useState("");
   const [errorKey, setErrorKey] = useState("");
   const [refreshVersion, setRefreshVersion] = useState(0);
+  const [exporting, setExporting] = useState<"xlsx" | "pdf" | null>(null);
+const [exportError, setExportError] = useState("");
 
  const requestKey = JSON.stringify({
   activeTab,
@@ -216,7 +218,51 @@ const ReportsPage = () => {
 
   const isLoading = loadedKey !== requestKey;
   const currentError = errorKey === requestKey ? error : "";
+const handleExport = async (format: "xlsx" | "pdf") => {
+  if (!isReportType(activeTab) || isLoading || currentError) return;
 
+  setExporting(format);
+  setExportError("");
+
+  const reportFilters: ReportFilters = {
+    date_from: filters.date_from,
+    date_to: filters.date_to,
+    group_by: filters.group_by,
+  };
+
+  if (activeTab === "users") {
+    reportFilters.role = filters.role;
+    reportFilters.status = filters.status;
+  }
+
+  if (activeTab === "pets") {
+    reportFilters.species = filters.species;
+    reportFilters.listing_type = filters.listing_type;
+    reportFilters.status = filters.status;
+  }
+
+  if (activeTab === "product-sales") {
+    reportFilters.category = filters.category;
+    reportFilters.business = filters.business;
+  }
+
+  if (activeTab === "pet-sales") {
+    reportFilters.species = filters.species;
+    reportFilters.business = filters.business;
+  }
+
+  try {
+    await reportsApi.exportReport(activeTab, format, reportFilters);
+  } catch (err) {
+    setExportError(
+      err instanceof Error
+        ? err.message
+        : "Could not export this report. Please try again.",
+    );
+  } finally {
+    setExporting(null);
+  }
+};
  const handleRefresh = () => {
   setRefreshVersion((version) => version + 1);
   setError("");
@@ -259,7 +305,33 @@ const ReportsPage = () => {
         onRefresh={handleRefresh}
         loading={isLoading}
       />
+{!isBookingTab && (
+  <div className="reports-export-actions">
+    <button
+      type="button"
+      className="reports-export-button reports-export-excel"
+      onClick={() => void handleExport("xlsx")}
+      disabled={isLoading || Boolean(currentError) || exporting !== null}
+    >
+      {exporting === "xlsx" ? "Exporting Excel..." : "Export Excel"}
+    </button>
 
+    <button
+      type="button"
+      className="reports-export-button reports-export-pdf"
+      onClick={() => void handleExport("pdf")}
+      disabled={isLoading || Boolean(currentError) || exporting !== null}
+    >
+      {exporting === "pdf" ? "Exporting PDF..." : "Export PDF"}
+    </button>
+  </div>
+)}
+
+{exportError && (
+  <div className="reports-export-error" role="alert">
+    {exportError}
+  </div>
+)}
       {isBookingTab && (
         <div className="reports-booking-filters">
           <div className="reports-filter-field">
