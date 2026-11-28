@@ -26,6 +26,7 @@ import AuditLogsPage from "./pages/admin/AuditLogsPage";
 import MarketplacePerformancePage from "./pages/admin/MarketplacePerformancePage";
 import ReportsPage from "./pages/admin/ReportsPage";
 import AnalyticsPage from "./pages/admin/AnalyticsPage";
+import { ReviewsManagement } from "./pages/admin/ReviewsManagement";
 import OrdersManagementPage from "./pages/admin/OrdersManagementPage";
 import AdminManagement from "./pages/auth/AdminManagement";
 import { UnavailableAdminFeature } from "./pages/UnavailableAdminFeature";
@@ -90,6 +91,10 @@ const PAGE_INFO: Record<string, { title: string; breadcrumb?: string }> = {
     title: "Audit Logs",
     breadcrumb: "Admin / Platform Administration / Audit Logs",
   },
+  "/admin/bookings": {
+    title: "Bookings",
+    breadcrumb: "Admin / Marketplace / Bookings",
+  },
   "/admin/analytics": {
     title: "Analytics",
     breadcrumb: "Admin / Insights / Analytics",
@@ -98,7 +103,10 @@ const PAGE_INFO: Record<string, { title: string; breadcrumb?: string }> = {
     title: "Platform Reports",
     breadcrumb: "Admin / Insights / Platform Reports",
   },
-
+  "/admin/reviews": {
+    title: "Reviews & Reports",
+    breadcrumb: "Admin / Trust & Support / Reports",
+  },
   "/admin/listings/services": { title: "Services" },
   "/admin/adoptions": { title: "Adoption Applications" },
   "/admin/notifications": { title: "Notifications" },
@@ -149,20 +157,23 @@ function Layout() {
   };
 
   const operationalFeatures: Record<string, string> = {
-  "/admin/customers": "Customers",
+    "/admin/customers": "Customers",
 
-  "/admin/payments": "Payments & Transactions",
-  "/admin/reviews": "Reviews & Reports",
-  "/admin/support": "Customer Support",
-  "/admin/roles": "Roles & Permissions",
+    "/admin/payments": "Payments & Transactions",
+    "/admin/support": "Customer Support",
+    "/admin/roles": "Roles & Permissions",
 
-  "/admin/system-settings": "System Settings",
-  "/admin/configuration": "Platform Configuration",
-};
+    "/admin/system-settings": "System Settings",
+    "/admin/configuration": "Platform Configuration",
+  };
   const isSuperAdminPath = [
-  "/admin/management", "/admin/management/new", "/admin-form",
-  "/admin/roles", "/admin/system-settings", "/admin/configuration",
-].includes(location.pathname);
+    "/admin/management",
+    "/admin/management/new",
+    "/admin-form",
+    "/admin/roles",
+    "/admin/system-settings",
+    "/admin/configuration",
+  ].includes(location.pathname);
   return (
     <AdminAccessGate>
       <div
@@ -193,7 +204,6 @@ function Layout() {
             <Route path="/dashboard" element={<AdminDashboard />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
-
             <Route
               path="/admin/management"
               element={
@@ -218,7 +228,6 @@ function Layout() {
                 </SuperAdminRoute>
               }
             />
-
             <Route path="/admin/vendors" element={<VendorApplicationsPage />} />
             <Route
               path="/admin/users"
@@ -248,25 +257,30 @@ function Layout() {
               path="/admin/listings/categories"
               element={<CategoriesManagement />}
             />
-
-           <Route
-  path="/admin/listings/approval"
-  element={<Navigate to="/admin/listings/pets" replace />}
-/>
-            <Route path="/admin/adoptions" element={<AdoptionApplicationsPage />} />
-            <Route path="/admin/notifications" element={<AdminNotificationsPage />} />
-            <Route path="/admin/orders" element={<OrdersManagementPage />}/> 
-                     <Route path="/admin/bookings" element={<BookingsManagement />} />
+            <Route
+              path="/admin/listings/approval"
+              element={<Navigate to="/admin/listings/pets" replace />}
+            />
+            <Route
+              path="/admin/adoptions"
+              element={<AdoptionApplicationsPage />}
+            />
+            <Route
+              path="/admin/notifications"
+              element={<AdminNotificationsPage />}
+            />
+            <Route path="/admin/orders" element={<OrdersManagementPage />} />
+            <Route path="/admin/bookings" element={<BookingsManagement />} />
             <Route path="/admin/audit" element={<AuditLogsPage />} />
-            <Route path="/admin/marketplace-performance"  element={<MarketplacePerformancePage />}/>
-            <Route path="/admin/analytics"element={<AnalyticsPage />}/>   
-                   <Route path="/admin/reports" element={<ReportsPage />} />
+           <Route  path="/admin/marketplace-performance" element={<MarketplacePerformancePage />}/>
+           <Route path="/admin/analytics" element={<AnalyticsPage />} />
+           <Route path="/admin/reports" element={<ReportsPage />} />
+           <Route path="/admin/reviews" element={<ReviewsManagement />} />
             <Route path="/admin/profile" element={<AdminProfilePage />} />
             <Route
               path="/admin/settings/security"
               element={<ChangeAdminPasswordPage />}
             />
-
             {Object.entries(operationalFeatures).map(([path, title]) => (
               <Route
                 key={path}
@@ -282,7 +296,6 @@ function Layout() {
                 }
               />
             ))}
-
             <Route
               path="*"
               element={<Navigate to="/admin/dashboard" replace />}

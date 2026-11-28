@@ -338,6 +338,10 @@ export interface Paged<T> {
   results: T[];
 }
 
+export type ReportStatus = "PENDING" | "DISMISSED" | "RESOLVED";
+
+export type RawReport = Record<string, unknown>;
+
 
 export const adminApi = {
   async getCategories() {
@@ -423,6 +427,42 @@ export const adminApi = {
     return apiRequest<RawBooking>(`/admin/bookings/${id}/status/`, {
       method: "PATCH",
       body: JSON.stringify({ status }),
+    });
+  },
+
+    getReports(params: {
+    page?: number;
+    page_size?: number;
+    status?: ReportStatus;
+    item_type?: string;
+  } = {}) {
+    const query = new URLSearchParams();
+
+    if (params.status) query.set("status", params.status);
+    if (params.item_type) query.set("item_type", params.item_type);
+
+    query.set("page", String(params.page ?? 1));
+    query.set("page_size", String(params.page_size ?? 20));
+
+    return apiRequest<Paged<RawReport>>(
+      `/reports/admin/?${query.toString()}`
+    );
+  },
+
+  getReport(id: string) {
+    return apiRequest<RawReport>(`/reports/admin/${id}/`);
+  },
+
+  updateReportStatus(id: string, status: ReportStatus) {
+    return apiRequest<RawReport>(`/reports/admin/${id}/status/`, {
+      method: "PATCH",
+      body: JSON.stringify({ status }),
+    });
+  },
+
+  removeReportedItem(id: string) {
+    return apiRequest<unknown>(`/reports/admin/${id}/remove/`, {
+      method: "POST",
     });
   },
 
