@@ -25,6 +25,7 @@ import { CategoriesManagement } from "./pages/CategoriesManagement";
 import AuditLogsPage from "./pages/admin/AuditLogsPage";
 import MarketplacePerformancePage from "./pages/admin/MarketplacePerformancePage";
 import ReportsPage from "./pages/admin/ReportsPage";
+import AnalyticsPage from "./pages/admin/AnalyticsPage";
 import { ReviewsManagement } from "./pages/admin/ReviewsManagement";
 import OrdersManagementPage from "./pages/admin/OrdersManagementPage";
 import AdminManagement from "./pages/auth/AdminManagement";
@@ -86,13 +87,21 @@ const PAGE_INFO: Record<string, { title: string; breadcrumb?: string }> = {
     title: "Orders Management",
     breadcrumb: "Admin / Orders",
   },
+  "/admin/audit": {
+    title: "Audit Logs",
+    breadcrumb: "Admin / Platform Administration / Audit Logs",
+  },
   "/admin/bookings": {
     title: "Bookings",
     breadcrumb: "Admin / Marketplace / Bookings",
   },
-  "/admin/audit": {
-    title: "Audit Logs",
-    breadcrumb: "Admin / Platform Administration / Audit Logs",
+  "/admin/analytics": {
+    title: "Analytics",
+    breadcrumb: "Admin / Insights / Analytics",
+  },
+  "/admin/reports": {
+    title: "Platform Reports",
+    breadcrumb: "Admin / Insights / Platform Reports",
   },
   "/admin/reviews": {
     title: "Reviews & Reports",
@@ -263,12 +272,10 @@ function Layout() {
             <Route path="/admin/orders" element={<OrdersManagementPage />} />
             <Route path="/admin/bookings" element={<BookingsManagement />} />
             <Route path="/admin/audit" element={<AuditLogsPage />} />
-            <Route
-              path="/admin/marketplace-performance"
-              element={<MarketplacePerformancePage />}
-            />
-            <Route path="/admin/reports" element={<ReportsPage />} />
-            <Route path="/admin/reviews" element={<ReviewsManagement />} />
+           <Route  path="/admin/marketplace-performance" element={<MarketplacePerformancePage />}/>
+           <Route path="/admin/analytics" element={<AnalyticsPage />} />
+           <Route path="/admin/reports" element={<ReportsPage />} />
+           <Route path="/admin/reviews" element={<ReviewsManagement />} />
             <Route path="/admin/profile" element={<AdminProfilePage />} />
             <Route
               path="/admin/settings/security"
