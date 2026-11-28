@@ -35,7 +35,7 @@ const ADMIN_NAV = [
     { label: "Customer Support", path: "/admin/support", Icon: MessageCircle },
   ] },
  { title: "INSIGHTS", items: [
-  { label: "Reports", path: "/admin/reports", Icon: ChartNoAxesCombined },
+ { label: "Platform Reports", path: "/admin/reports", Icon: ChartNoAxesCombined },
   { label: "Analytics", path: "/admin/analytics", Icon: ChartNoAxesCombined },
    { label: "Marketplace Performance", path: "/admin/marketplace-performance", Icon: ChartNoAxesCombined },
 ] },
