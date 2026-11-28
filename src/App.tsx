@@ -16,6 +16,7 @@ import AdminForm from "./components/AdminForm";
 import AdminLoginPage from "./pages/auth/AdminLoginPage";
 import AdminAccessGate from "./components/auth/AdminAccessGate";
 import { SuperAdminRoute } from "./components/auth/SuperAdminRoute";
+import { BookingsManagement } from "./pages/admin/BookingsManagement";
 import { isSuperAdmin } from "./services/adminRoles";
 import UserManagement from "./pages/auth/UserManagement";
 import { PetListingsManagementPage } from "./pages/auth/PetListingsManagementPage";
@@ -84,6 +85,10 @@ const PAGE_INFO: Record<string, { title: string; breadcrumb?: string }> = {
   "/admin/orders": {
     title: "Orders Management",
     breadcrumb: "Admin / Orders",
+  },
+  "/admin/bookings": {
+    title: "Bookings",
+    breadcrumb: "Admin / Marketplace / Bookings",
   },
   "/admin/audit": {
     title: "Audit Logs",
@@ -256,11 +261,12 @@ function Layout() {
               element={<AdminNotificationsPage />}
             />
             <Route path="/admin/orders" element={<OrdersManagementPage />} />
+            <Route path="/admin/bookings" element={<BookingsManagement />} />
             <Route path="/admin/audit" element={<AuditLogsPage />} />
             <Route
               path="/admin/marketplace-performance"
               element={<MarketplacePerformancePage />}
-            />{" "}
+            />
             <Route path="/admin/reports" element={<ReportsPage />} />
             <Route path="/admin/reviews" element={<ReviewsManagement />} />
             <Route path="/admin/profile" element={<AdminProfilePage />} />
